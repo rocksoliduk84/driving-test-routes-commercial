@@ -1,0 +1,2614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a1628">
+<meta name="description" content="Driving Test Routes Master UK & Ireland – live test centres, routes and smart resume navigation.">
+<title>Driving Test Routes Master UK & Ireland</title>
+<link rel="manifest" href="/manifest.webmanifest" id="manifest-link">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<!-- Google Sign-In -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--navy:#0a1628;--navy-light:#112240;--navy-card:#1a2f4a;--red:#e63946;--red-dark:#c1121f;--gold:#ffd700;--white:#ffffff;--grey:#8892a4;--green:#2ecc71;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans-serif;height:100vh;overflow:hidden;}
+
+/* AUTH SCREEN */
+#auth-screen{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;}
+#auth-screen.hidden{display:none;}
+.auth-logo{font-size:60px;margin-bottom:16px;}
+.auth-title{font-size:24px;font-weight:700;text-align:center;margin-bottom:8px;}
+.auth-sub{font-size:14px;color:var(--grey);text-align:center;margin-bottom:32px;line-height:1.6;}
+.auth-device-info{background:var(--navy-card);border:1px solid #1e3a5f;border-radius:12px;padding:16px;margin-bottom:24px;width:100%;max-width:340px;text-align:center;}
+.auth-device-info p{font-size:12px;color:var(--grey);margin-bottom:8px;}
+.auth-device-id{font-size:11px;color:var(--gold);font-family:monospace;word-break:break-all;}
+#google-signin-btn{margin-bottom:12px;}
+.auth-terms{font-size:10px;color:var(--grey);text-align:center;margin-top:16px;line-height:1.5;}
+
+/* DEVICE LOCKED SCREEN */
+#locked-screen{position:fixed;inset:0;background:var(--navy);z-index:9998;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;}
+#locked-screen.show{display:flex;}
+.locked-icon{font-size:60px;margin-bottom:16px;}
+.locked-title{font-size:22px;font-weight:700;text-align:center;color:var(--red);margin-bottom:12px;}
+.locked-msg{font-size:14px;color:var(--grey);text-align:center;line-height:1.6;margin-bottom:24px;max-width:320px;}
+.locked-device{background:var(--navy-card);border:1px solid var(--red);border-radius:10px;padding:14px;width:100%;max-width:320px;text-align:center;margin-bottom:20px;}
+.locked-device p{font-size:12px;color:var(--grey);margin-bottom:6px;}
+.locked-device span{font-size:11px;color:var(--gold);font-family:monospace;word-break:break-all;}
+
+/* HEADER */
+.header{background:var(--navy-light);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--red);position:fixed;top:0;left:0;right:0;z-index:1000;}
+.header-logo{display:flex;align-items:center;gap:10px;}
+.header-title{font-size:13px;font-weight:700;color:var(--white);line-height:1.2;}
+.header-title span{color:var(--red);}
+.header-tagline{font-size:10px;color:var(--grey);}
+.header-right{display:flex;align-items:center;gap:8px;}
+.adi-badge{background:var(--gold);color:var(--navy);font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;cursor:pointer;}
+.user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid var(--red);cursor:pointer;background:var(--navy-card);display:flex;align-items:center;justify-content:center;font-size:14px;}
+
+/* TABS */
+.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--navy-light);display:flex;border-top:1px solid #1e3a5f;z-index:1000;}
+.tab{flex:1;padding:8px 2px;text-align:center;cursor:pointer;transition:all 0.2s;border:none;background:none;color:var(--grey);font-size:9px;}
+.tab .tab-icon{font-size:17px;display:block;margin-bottom:2px;}
+.tab.active{color:var(--red);}
+.tab.active .tab-icon{transform:scale(1.15);}
+
+/* CONTENT */
+.content{position:fixed;top:63px;bottom:58px;left:0;right:0;overflow-y:auto;}
+.tab-content{display:none;height:100%;}
+.tab-content.active{display:block;}
+
+/* MAP - navy bg to prevent green flash */
+#map{height:100%;width:100%;background:#0a1628 !important;}
+.leaflet-container{background:#0a1628 !important;}
+.map-search{position:absolute;top:10px;left:10px;right:10px;z-index:500;display:flex;gap:8px;}
+.map-search input{flex:1;padding:10px 14px;border-radius:8px;border:none;background:rgba(17,34,64,0.95);color:var(--white);font-size:14px;border:1px solid #1e3a5f;}
+.map-search input::placeholder{color:var(--grey);}
+.map-search button{background:var(--red);border:none;color:white;padding:10px 14px;border-radius:8px;font-size:16px;cursor:pointer;}
+
+/* CARDS */
+.page-content{padding:16px;}
+.page-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+.page-subtitle{font-size:12px;color:var(--grey);margin-bottom:16px;}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--navy-card);border-radius:10px;padding:14px;text-align:center;border:1px solid #1e3a5f;}
+.stat-number{font-size:22px;font-weight:700;color:var(--red);}
+.stat-label{font-size:11px;color:var(--grey);margin-top:2px;}
+.centre-card{background:var(--navy-card);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid #1e3a5f;cursor:pointer;transition:border-color 0.2s;}
+.centre-card:active{border-color:var(--red);}
+.centre-name{font-size:14px;font-weight:600;margin-bottom:4px;}
+.centre-meta{font-size:12px;color:var(--grey);display:flex;gap:12px;}
+.centre-region{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;display:inline-block;margin-bottom:6px;}
+.region-england{background:#1a3a5c;color:#60a5fa;}
+.region-scotland{background:#1a3a2c;color:#34d399;}
+.region-wales{background:#2a1a3a;color:#a78bfa;}
+.region-ni{background:#3a2a1a;color:#fb923c;}
+.region-ireland{background:#1a3a2a;color:#4ade80;}
+.route-card{background:var(--navy-card);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid #1e3a5f;cursor:pointer;transition:border-color 0.2s;}
+.route-card:active{border-color:var(--red);}
+.route-card.adi-locked{opacity:0.6;position:relative;}
+.route-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.route-name{font-size:14px;font-weight:600;}
+.route-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;}
+.badge-standard{background:#1a3a5c;color:#60a5fa;}
+.badge-adi{background:#2a1a0a;color:var(--gold);}
+.badge-locked{background:#1e3a5f;color:var(--grey);}
+.route-meta{font-size:12px;color:var(--grey);}
+.route-actions{display:flex;gap:8px;margin-top:10px;}
+.btn{padding:10px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.2s;}
+.btn:active{opacity:0.8;}
+.btn-red{background:var(--red);color:white;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-outline{background:transparent;color:var(--red);border:1px solid var(--red);}
+.btn-full{width:100%;margin-top:8px;}
+.btn-nav{background:#1a3a2c;color:var(--green);border:1px solid var(--green);flex:1;}
+
+/* ADI PRO */
+.adi-hero{background:linear-gradient(135deg,#1a2a0a,#2a3a1a);border:2px solid var(--gold);border-radius:14px;padding:20px;text-align:center;margin-bottom:16px;}
+.adi-crown{font-size:40px;margin-bottom:8px;}
+.adi-title{font-size:22px;font-weight:700;color:var(--gold);}
+.adi-subtitle{font-size:13px;color:var(--grey);margin-top:4px;}
+.price-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0;}
+.price-card{background:var(--navy-card);border-radius:10px;padding:12px;text-align:center;border:1px solid #1e3a5f;cursor:pointer;transition:border-color 0.2s;}
+.price-card.selected{border-color:var(--gold);}
+.price-amount{font-size:18px;font-weight:700;color:var(--gold);}
+.price-period{font-size:10px;color:var(--grey);}
+.price-label{font-size:11px;color:var(--white);margin-top:4px;}
+.feature-list{list-style:none;margin:16px 0;}
+.feature-list li{padding:8px 0;border-bottom:1px solid #1e3a5f;font-size:13px;display:flex;align-items:center;gap:8px;}
+.feature-list li:last-child{border-bottom:none;}
+
+/* ANALYTICS */
+.analytics-card{background:var(--navy-card);border-radius:10px;padding:16px;margin-bottom:10px;border:1px solid #1e3a5f;}
+.analytics-title{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--grey);}
+.progress-bar-wrap{margin-bottom:10px;}
+.progress-label{font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px;}
+.progress-bar{height:8px;background:#1e3a5f;border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--red);border-radius:4px;transition:width 0.5s;}
+.achievement-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.achievement{background:var(--navy-light);border-radius:8px;padding:10px;text-align:center;border:1px solid #1e3a5f;}
+.achievement-icon{font-size:24px;}
+.achievement-name{font-size:10px;color:var(--grey);margin-top:4px;}
+
+/* SETTINGS */
+.settings-section{margin-bottom:20px;}
+.settings-title{font-size:12px;color:var(--grey);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.settings-item{background:var(--navy-card);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #1e3a5f;cursor:pointer;}
+.settings-label{font-size:14px;}
+.settings-value{font-size:12px;color:var(--grey);}
+.toggle{width:44px;height:24px;background:#1e3a5f;border-radius:12px;position:relative;cursor:pointer;transition:background 0.2s;}
+.toggle.on{background:var(--red);}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:white;border-radius:50%;top:3px;left:3px;transition:left 0.2s;}
+.toggle.on::after{left:23px;}
+
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:20px;}
+.modal.open{display:flex;}
+.modal-box{background:var(--navy-light);border-radius:14px;padding:20px;width:100%;max-width:400px;border:1px solid #1e3a5f;max-height:80vh;overflow-y:auto;}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:8px;}
+.modal-text{font-size:13px;color:var(--grey);margin-bottom:16px;line-height:1.5;}
+.modal-buttons{display:flex;gap:10px;margin-top:12px;}
+.modal-buttons button{flex:1;}
+
+/* ROUTE DETAIL IN POPUP */
+.popup-routes{margin-top:8px;}
+.popup-routes-title{font-size:11px;color:var(--grey);font-weight:700;text-transform:uppercase;margin-bottom:6px;}
+.popup-route-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+.popup-chip{background:#1a2f4a;border:1px solid #1e3a5f;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;color:var(--white);transition:background 0.15s;}
+.popup-chip:hover,.popup-chip:active{background:var(--red);border-color:var(--red);}
+.popup-chip.adi-chip{border-color:#3a2a0a;color:var(--gold);}
+.popup-chip.adi-chip:hover{background:#3a2a0a;}
+.popup-btn{background:var(--red);color:white;border:none;padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;margin-top:8px;width:100%;font-weight:600;}
+
+/* VOICE NAV BAR */
+.nav-bar{background:var(--navy-light);border-radius:12px;padding:14px;margin-bottom:14px;border:1px solid var(--green);display:none;}
+.nav-bar.active{display:block;}
+.nav-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.nav-instruction{font-size:15px;font-weight:600;color:var(--green);}
+.nav-distance{font-size:12px;color:var(--grey);margin-top:4px;}
+.nav-stop{background:var(--red);border:none;color:white;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;}
+.nav-steps{margin-top:10px;border-top:1px solid #1e3a5f;padding-top:10px;}
+.nav-step{font-size:12px;color:var(--grey);padding:4px 0;display:flex;align-items:flex-start;gap:8px;}
+.nav-step .step-num{color:var(--red);font-weight:700;min-width:16px;}
+
+/* SEARCH */
+.search-box{background:var(--navy-card);border:1px solid #1e3a5f;border-radius:10px;padding:12px 16px;width:100%;color:var(--white);font-size:14px;margin-bottom:14px;}
+.search-box::placeholder{color:var(--grey);}
+.filter-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+.filter-chip{background:var(--navy-card);border:1px solid #1e3a5f;border-radius:20px;padding:6px 14px;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--grey);}
+.filter-chip.active{background:var(--red);color:white;border-color:var(--red);}
+
+/* POPUP */
+.leaflet-popup-content-wrapper{background:var(--navy-light)!important;color:var(--white)!important;border:1px solid var(--red)!important;border-radius:10px!important;min-width:220px;}
+.leaflet-popup-tip{background:var(--navy-light)!important;}
+.leaflet-popup-content{margin:10px 12px!important;}
+.popup-title{font-weight:700;font-size:14px;color:var(--red);}
+.popup-info{font-size:11px;color:var(--grey);margin-top:3px;}
+
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:var(--navy-light);border:1px solid var(--red);color:white;padding:10px 20px;border-radius:8px;font-size:13px;z-index:3000;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* SECTION DIVIDER */
+.section-divider{font-size:11px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:1px;padding:10px 0 6px;border-bottom:1px solid #1e3a5f;margin-bottom:10px;}
+
+  /* Navigation Modal */
+  #nav-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #0a1628;
+    z-index: 9999;
+    flex-direction: column;
+  }
+  #nav-modal.open { display: flex; }
+  #nav-header {
+    background: #112240;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #1e3a5f;
+    flex-shrink: 0;
+  }
+  #nav-route-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    flex: 1;
+  }
+  #nav-phase-label {
+    font-size: 11px;
+    color: #64ffda;
+    font-weight: 600;
+  }
+  #nav-map {
+    flex: 1;
+    min-height: 0;
+  }
+  #nav-bottom {
+    background: #112240;
+    border-top: 1px solid #1e3a5f;
+    padding: 12px 16px;
+    flex-shrink: 0;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  #nav-instruction {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ccd6f6;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  #nav-step-counter {
+    font-size: 11px;
+    color: #8892b0;
+    margin-bottom: 8px;
+  }
+  #nav-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .nav-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+    min-width: 80px;
+  }
+  .nav-btn-prev { background: #1e3a5f; color: #ccd6f6; }
+  .nav-btn-next { background: #64ffda; color: #0a1628; }
+  .nav-btn-stop { background: #e63946; color: #fff; }
+  .nav-btn-begin { background: #34d399; color: #0a1628; font-size: 14px; padding: 12px; width: 100%; }
+  #nav-steps-list {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .nav-step {
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #8892b0;
+    margin-bottom: 3px;
+    line-height: 1.4;
+  }
+  .nav-step-active {
+    background: #1e3a5f;
+    color: #64ffda;
+    font-weight: 700;
+  }
+  .nav-step-done {
+    color: #3d4f6b;
+    text-decoration: line-through;
+  }
+  .nav-step-dest {
+    color: #e63946;
+    font-weight: 600;
+  }
+  #nav-begin-btn {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  #nav-actions-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .nav-btn-google {
+    background: #fff;
+    color: #1a73e8;
+    border: 1px solid #d2e3fc;
+  }
+  .nav-btn-secondary {
+    background: #1e3a5f;
+    color: #fff;
+    border: 1px solid #32527b;
+  }
+  #offroute-card {
+    display: none;
+    background: rgba(230,57,70,0.14);
+    border: 1px solid rgba(230,57,70,0.55);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  #offroute-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  #offroute-meta {
+    font-size: 12px;
+    color: #ccd6f6;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .offroute-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .offroute-actions .nav-btn {
+    flex: 1 1 140px;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-logo">🚗</div>
+  <div class="auth-title">Driving Test Routes<br><span style="color:var(--red)">Master</span></div>
+  <div class="auth-sub">UK & Ireland · <span id="app-centre-count-auth">190</span> Centres · <span id="app-route-count-auth">4,180</span> Routes<br>Sign in to sync your progress across sessions.</div>
+  <div class="auth-device-info">
+    <p>Your device will be registered to your account.<br>One account = one device.</p>
+    <div class="auth-device-id" id="auth-device-id">Generating device ID…</div>
+  </div>
+  <div id="google-signin-btn"></div>
+  <div style="margin:12px 0;color:var(--grey);font-size:12px;">— or —</div>
+  <button class="btn btn-outline" style="max-width:280px;width:100%;" onclick="skipAuth()">Continue as Guest</button>
+  <div class="auth-terms">By signing in you agree that this app may store your<br>device fingerprint linked to your account.<br>One account may only be active on one device at a time.</div>
+</div>
+
+<!-- DEVICE LOCKED SCREEN -->
+<div id="locked-screen">
+  <div class="locked-icon">🔒</div>
+  <div class="locked-title">Account Already Active</div>
+  <div class="locked-msg">This Google account is already registered on another device. To use this device, please sign out from the other device first or contact support.</div>
+  <div class="locked-device">
+    <p>This device ID:</p>
+    <span id="locked-device-id"></span>
+  </div>
+  <div class="locked-device" style="border-color:#1e3a5f;">
+    <p>Registered device:</p>
+    <span id="registered-device-id">Unknown</span>
+  </div>
+  <button class="btn btn-outline btn-full" style="max-width:300px;" onclick="forceThisDevice()">⚠️ Force Register This Device</button>
+  <button class="btn btn-outline btn-full" style="max-width:300px;margin-top:8px;color:var(--grey);border-color:var(--grey);" onclick="skipAuth()">Continue as Guest</button>
+</div>
+
+<!-- USER PROFILE MODAL -->
+<div class="modal" id="user-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="user-modal-name">My Account</div>
+    <div class="modal-text" id="user-modal-email"></div>
+    <div style="background:var(--navy-card);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid #1e3a5f;">
+      <div style="font-size:11px;color:var(--grey);margin-bottom:4px;">Registered Device ID</div>
+      <div style="font-size:11px;color:var(--gold);font-family:monospace;word-break:break-all;" id="user-modal-device"></div>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-outline" onclick="closeModal('user-modal')">Close</button>
+      <button class="btn btn-red" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header" id="main-header" style="display:none;">
+  <div class="header-logo">
+    <span style="font-size:22px;">🚗</span>
+    <div>
+      <div class="header-title">Driving Test Routes <span>Master</span></div>
+      <div class="header-tagline">UK & Ireland · <span id="app-centre-count-header">190</span> Centres · <span id="app-route-count-header">4,180</span> Routes</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="adi-badge" onclick="showTab('adi')">👑 ADI Pro</div>
+    <div class="user-avatar" id="user-avatar" onclick="showUserModal()">👤</div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="main-content" style="display:none;">
+
+  <!-- MAP TAB -->
+  <div class="tab-content active" id="tab-map">
+    <div style="position:relative;height:100%;">
+      <div class="map-search">
+        <input type="text" id="map-search-input" placeholder="🔍 Search test centres…" oninput="filterMapCentres(this.value)">
+        <button onclick="locateUser()">📍</button>
+      </div>
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- CENTRES TAB -->
+  <div class="tab-content" id="tab-centres">
+    <div class="page-content">
+      <div class="page-title">Test Centres</div>
+      <div class="page-subtitle"><span id="app-centre-count-subtitle">190</span> centres across UK & Ireland</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-number" id="app-centre-count-card">190</div><div class="stat-label">Total Centres</div></div>
+        <div class="stat-card"><div class="stat-number" id="app-route-count-card">4,180</div><div class="stat-label">Total Routes</div></div>
+        <div class="stat-card"><div class="stat-number">220</div><div class="stat-label">England</div></div>
+        <div class="stat-card"><div class="stat-number">162</div><div class="stat-label">Scotland/Wales/NI/IE</div></div>
+      </div>
+      <input class="search-box" type="text" placeholder="🔍 Search centres by name or town…" oninput="filterCentres(this.value)">
+      <div class="filter-row">
+        <div class="filter-chip active" onclick="filterRegion('all',this)">All</div>
+        <div class="filter-chip" onclick="filterRegion('England',this)">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</div>
+        <div class="filter-chip" onclick="filterRegion('Scotland',this)">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland</div>
+        <div class="filter-chip" onclick="filterRegion('Wales',this)">🏴󠁧󠁢󠁷󠁬󠁳󠁿 Wales</div>
+        <div class="filter-chip" onclick="filterRegion('Northern Ireland',this)">🍀 NI</div>
+        <div class="filter-chip" onclick="filterRegion('Ireland',this)">🇮🇪 Ireland</div>
+      </div>
+      <div id="centres-list"></div>
+    </div>
+  </div>
+
+  <!-- ROUTES TAB -->
+  <div class="tab-content" id="tab-routes">
+    <div class="page-content">
+      <div class="page-title">Practice Routes</div>
+      <div class="page-subtitle" id="routes-subtitle">Select a centre to see its routes</div>
+      <div class="nav-bar" id="nav-bar">
+        <div class="nav-top">
+          <div>
+            <div class="nav-instruction" id="nav-instruction">🔊 Head north on High Street</div>
+            <div class="nav-distance" id="nav-distance">In 200m · Turn left onto Park Road</div>
+          </div>
+          <button class="nav-stop" onclick="stopNavigation()">■ Stop</button>
+        </div>
+        <div class="nav-steps" id="nav-steps"></div>
+      </div>
+      <div id="routes-list"></div>
+    </div>
+  </div>
+
+  <!-- ADI PRO TAB -->
+  <div class="tab-content" id="tab-adi">
+    <div class="page-content">
+      <div class="adi-hero">
+        <div class="adi-crown">👑</div>
+        <div class="adi-title">ADI Pro Routes</div>
+        <div class="adi-subtitle">Advanced routes for driving instructors</div>
+      </div>
+      <div id="adi-content">
+        <div class="price-row">
+          <div class="price-card selected" id="price-onetime" onclick="selectPrice('onetime')">
+            <div class="price-amount">£3.99</div><div class="price-period">one-time</div><div class="price-label">Lifetime</div>
+          </div>
+          <div class="price-card" id="price-monthly" onclick="selectPrice('monthly')">
+            <div class="price-amount">£0.99</div><div class="price-period">per month</div><div class="price-label">Monthly</div>
+          </div>
+          <div class="price-card" id="price-yearly" onclick="selectPrice('yearly')">
+            <div class="price-amount">£7.99</div><div class="price-period">per year</div><div class="price-label">★ Best Value</div>
+          </div>
+        </div>
+        <ul class="feature-list">
+          <li>✅ 2,674 ADI Part 2 routes</li>
+          <li>✅ 7 advanced routes per centre</li>
+          <li>✅ All 382 UK & Ireland centres</li>
+          <li>✅ Dual carriageway circuits</li>
+          <li>✅ Full assessment routes</li>
+          <li>✅ Motorway & rural routes</li>
+          <li>✅ Voice navigation included</li>
+          <li>✅ Offline access</li>
+        </ul>
+        <button class="btn btn-gold btn-full" onclick="purchaseADI()">👑 Unlock ADI Pro — <span id="price-display">£3.99</span></button>
+        <button class="btn btn-outline btn-full" style="margin-top:8px;" onclick="startTrial()">Try Free for 24 Hours</button>
+        <p style="font-size:11px;color:var(--grey);text-align:center;margin-top:10px;">30-day money back guarantee · Cancel anytime</p>
+      </div>
+      <div id="adi-unlocked" style="display:none">
+        <div style="background:#1a3a2c;border-radius:10px;padding:16px;text-align:center;margin-bottom:16px;border:1px solid var(--green);">
+          <div style="font-size:30px;">🎉</div>
+          <div style="font-size:16px;font-weight:700;color:var(--green);">ADI Pro Unlocked!</div>
+          <div style="font-size:12px;color:var(--grey);margin-top:4px;">Access all 2,674 ADI routes</div>
+        </div>
+        <div id="adi-routes-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS TAB -->
+  <div class="tab-content" id="tab-analytics">
+    <div class="page-content">
+      <div class="page-title">My Progress</div>
+      <div class="page-subtitle">Track your test preparation</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-number" id="stat-viewed">0</div><div class="stat-label">Routes Viewed</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-navigated">0</div><div class="stat-label">Navigated</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-centres">0</div><div class="stat-label">Centres Explored</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-streak">0</div><div class="stat-label">Day Streak 🔥</div></div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-title">PREPARATION SCORE</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label"><span>Overall Readiness</span><span id="score-pct">0%</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="score-bar" style="width:0%"></div></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label"><span>Routes Completed</span><span id="routes-pct">0%</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="routes-bar" style="width:0%"></div></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label"><span>Centres Explored</span><span id="centres-pct">0%</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="centres-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-title">ACHIEVEMENTS</div>
+        <div class="achievement-grid">
+          <div class="achievement"><div class="achievement-icon" id="ach1">🔒</div><div class="achievement-name">Explorer</div></div>
+          <div class="achievement"><div class="achievement-icon" id="ach2">🔒</div><div class="achievement-name">Route Master</div></div>
+          <div class="achievement"><div class="achievement-icon" id="ach3">🔒</div><div class="achievement-name">Navigator</div></div>
+          <div class="achievement"><div class="achievement-icon" id="ach4">🔒</div><div class="achievement-name">Test Ready</div></div>
+          <div class="achievement"><div class="achievement-icon" id="ach5">🔒</div><div class="achievement-name">ADI Scholar</div></div>
+          <div class="achievement"><div class="achievement-icon" id="ach6">🔒</div><div class="achievement-name">UK Master</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="tab-content" id="tab-settings">
+    <div class="page-content">
+      <div class="page-title">Settings</div>
+      <div class="page-subtitle">Customise your experience</div>
+      <div class="settings-section">
+        <div class="settings-title">Account</div>
+        <div class="settings-item" onclick="showUserModal()">
+          <div><div class="settings-label">👤 Signed In As</div><div class="settings-value" id="settings-user-name">Guest</div></div>
+          <div style="color:var(--grey);">›</div>
+        </div>
+        <div class="settings-item">
+          <div><div class="settings-label">📱 Device ID</div><div class="settings-value" id="settings-device-id" style="font-family:monospace;font-size:10px;word-break:break-all;max-width:180px;"></div></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Navigation</div>
+        <div class="settings-item">
+          <div><div class="settings-label">🔊 Voice Navigation</div><div class="settings-value">en-GB voice guidance</div></div>
+          <div class="toggle on" id="toggle-voice" onclick="toggleSetting('voice')"></div>
+        </div>
+        <div class="settings-item">
+          <div><div class="settings-label">📍 GPS Tracking</div><div class="settings-value">Live position on map</div></div>
+          <div class="toggle on" id="toggle-gps" onclick="toggleSetting('gps')"></div>
+        </div>
+        <div class="settings-item" id="resume-nav-item" onclick="showResumeNavigationModal()" style="display:none;">
+          <div><div class="settings-label">🧭 Resume Navigation</div><div class="settings-value" id="resume-nav-summary">Continue a saved route</div></div>
+          <div style="color:var(--grey);">›</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">App</div>
+        <div class="settings-item" onclick="showTestDateModal()">
+          <div><div class="settings-label">📅 Test Date</div><div class="settings-value" id="test-date-val">Not set</div></div>
+          <div style="color:var(--grey);">›</div>
+        </div>
+        <div class="settings-item" onclick="clearData()">
+          <div><div class="settings-label" style="color:var(--red);">🗑️ Clear Progress Data</div><div class="settings-value">Reset all statistics</div></div>
+          <div style="color:var(--grey);">›</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">About</div>
+        <div class="settings-item"><div class="settings-label">📱 Version</div><div class="settings-value">v12.0.0-alpha</div></div>
+        <div class="settings-item"><div class="settings-label">🏢 Centres</div><div class="settings-value" id="app-centre-count-settings">190</div></div>
+        <div class="settings-item"><div class="settings-label">🛣️ Routes</div><div class="settings-value" id="app-route-count-settings">4,180</div></div>
+      </div>
+      <p style="font-size:11px;color:var(--grey);text-align:center;margin-top:10px;">© 2025 Driving Test Routes Master UK & Ireland<br>Master Every Route. Pass First Time.</p>
+    </div>
+  </div>
+
+</div><!-- end content -->
+
+<!-- TABS -->
+<div class="tabs" id="main-tabs" style="display:none;">
+  <button class="tab active" onclick="showTab('map')"><span class="tab-icon">🗺️</span>Map</button>
+  <button class="tab" onclick="showTab('centres')"><span class="tab-icon">📍</span>Centres</button>
+  <button class="tab" onclick="showTab('routes')"><span class="tab-icon">🛣️</span>Routes</button>
+  <button class="tab" onclick="showTab('adi')"><span class="tab-icon">👑</span>ADI Pro</button>
+  <button class="tab" onclick="showTab('analytics')"><span class="tab-icon">📊</span>Progress</button>
+  <button class="tab" onclick="showTab('settings')"><span class="tab-icon">⚙️</span>Settings</button>
+</div>
+
+<!-- CENTRE MODAL -->
+<div class="modal" id="centre-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-centre-name">Centre Name</div>
+    <div class="modal-text" id="modal-centre-info">Info</div>
+    <div class="modal-buttons">
+      <button class="btn btn-outline" onclick="closeModal('centre-modal')">Close</button>
+      <button class="btn btn-red" onclick="viewCentreRoutes()">View Routes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROUTE MODAL -->
+<div class="modal" id="route-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-route-name">Route Name</div>
+    <div class="modal-text" id="modal-route-desc">Description</div>
+    <div style="background:var(--navy-card);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid #1e3a5f;" id="modal-route-steps-box">
+      <div style="font-size:11px;color:var(--grey);margin-bottom:8px;font-weight:700;">ROUTE OVERVIEW</div>
+      <div id="modal-route-steps" style="font-size:12px;color:var(--grey);line-height:1.8;"></div>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-outline" onclick="closeModal('route-modal')">Close</button>
+      <button class="btn btn-red" id="modal-nav-btn" onclick="openRealNavigation(currentRouteData&&currentRouteData.centre?currentRouteData.centre.id:1,currentRouteData?parseInt(currentRouteData.routeName.replace(/\D+/g,''))||1:1,currentRouteData&&currentRouteData.isAdi)">🗺️ Start Smart Navigation</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEST DATE MODAL -->
+<div class="modal" id="testdate-modal">
+  <div class="modal-box">
+    <div class="modal-title">📅 Set Your Test Date</div>
+    <div class="modal-text">We'll remind you 7, 3 and 1 day before your test!</div>
+    <input type="date" id="test-date-input" style="width:100%;padding:12px;background:var(--navy-card);border:1px solid #1e3a5f;border-radius:8px;color:white;font-size:14px;margin-bottom:14px;">
+    <div class="modal-buttons">
+      <button class="btn btn-outline" onclick="closeModal('testdate-modal')">Cancel</button>
+      <button class="btn btn-red" onclick="saveTestDate()">Save Date</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+
+<!-- RESUME NAVIGATION MODAL -->
+<div class="modal" id="resume-nav-modal">
+  <div class="modal-box">
+    <div class="modal-title">🧭 Resume your route</div>
+    <div class="modal-text" id="resume-nav-text">We found a saved route in progress.</div>
+    <div style="background:var(--navy-card);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid #1e3a5f;">
+      <div style="font-size:11px;color:var(--grey);margin-bottom:4px;">Saved navigation</div>
+      <div style="font-size:13px;line-height:1.6;" id="resume-nav-detail">Route details</div>
+    </div>
+    <div class="modal-buttons" style="flex-direction:column;">
+      <button class="btn btn-red" onclick="resumeSavedNavigation('continue')">Continue from current location</button>
+      <button class="btn btn-outline" onclick="resumeSavedNavigation('rejoin')">Guide me back to the route</button>
+      <button class="btn btn-outline" onclick="resumeSavedNavigation('restart')">Restart from test centre</button>
+      <button class="btn btn-outline" style="color:var(--grey);border-color:var(--grey);" onclick="discardSavedNavigation()">Discard saved route</button>
+    </div>
+  </div>
+</div>
+
+<!-- REAL MAP NAVIGATION MODAL -->
+  <div id="nav-modal">
+    <div id="nav-header">
+      <div>
+        <div id="nav-route-title">Navigation</div>
+        <div id="nav-phase-label">Phase 1: Going to Test Centre</div>
+      </div>
+      <button class="nav-btn nav-btn-stop" onclick="stopNavigation()" style="flex:none;padding:8px 14px;">✕ Stop</button>
+    </div>
+    <div id="nav-map"></div>
+    <div id="nav-bottom">
+      <div id="nav-instruction">Getting your location...</div>
+      <div id="nav-step-counter">Step 0 / 0</div>
+      <div id="nav-actions-row">
+        <button id="nav-google-btn" class="nav-btn nav-btn-google" onclick="openInGoogleMaps()">📲 Open in Google Maps</button>
+        <button id="nav-rejoin-btn" class="nav-btn nav-btn-secondary" onclick="rejoinCurrentRoute()">↩ Rejoin Route</button>
+      </div>
+      <div id="offroute-card">
+        <div id="offroute-title">⚠️ You’re off the planned route</div>
+        <div id="offroute-meta">Choose whether to continue from your current position, rejoin the planned route, or hand off to Google Maps.</div>
+        <div class="offroute-actions">
+          <button class="nav-btn nav-btn-next" onclick="continueFromCurrentLocation()">Continue from here</button>
+          <button class="nav-btn nav-btn-secondary" onclick="rejoinCurrentRoute()">Guide me back</button>
+          <button class="nav-btn nav-btn-google" onclick="openInGoogleMaps()">Open Google Maps</button>
+        </div>
+      </div>
+      <button id="nav-begin-btn" class="nav-btn nav-btn-begin" onclick="beginTestRoute()">
+        🚗 I'm at the Test Centre — Start Route
+      </button>
+      <div id="nav-controls" style="display:none;">
+        <button class="nav-btn nav-btn-prev" onclick="prevNavStep()">◀ Prev</button>
+        <button class="nav-btn nav-btn-next" onclick="nextNavStep()">Next ▶</button>
+        <button class="nav-btn nav-btn-stop" onclick="stopNavigation()">■ Stop</button>
+      </div>
+      <div id="nav-steps-list"></div>
+    </div>
+  </div>
+
+<script>
+// ============================================================
+// DEVICE FINGERPRINT — used to lock one account to one device
+// ============================================================
+function generateDeviceFingerprint() {
+  const nav = window.navigator;
+  const screen = window.screen;
+  const parts = [
+    nav.userAgent,
+    nav.language,
+    screen.colorDepth,
+    screen.width + 'x' + screen.height,
+    new Date().getTimezoneOffset(),
+    nav.hardwareConcurrency || '',
+    nav.platform || ''
+  ];
+  // Simple hash
+  let h = 0;
+  const str = parts.join('|');
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  }
+  return 'dev_' + Math.abs(h).toString(16).padStart(8,'0') + '_' + Date.now().toString(36);
+}
+
+// Get or create stable device ID
+function getDeviceId() {
+  let id = localStorage.getItem('dtrm_device_id');
+  if (!id) {
+    id = generateDeviceFingerprint();
+    localStorage.setItem('dtrm_device_id', id);
+  }
+  return id;
+}
+
+const DEVICE_ID = getDeviceId();
+
+// ============================================================
+// DEVICE LOCK STORAGE (localStorage-based)
+// In a real production app, this would be server-side.
+// Here we use localStorage as a demo that works per-browser.
+// The key insight: we store {googleId -> deviceId} mapping.
+// If a user signs in on device B and the stored deviceId ≠ B's ID → LOCKED.
+// ============================================================
+function getDeviceRegistry() {
+  try { return JSON.parse(localStorage.getItem('dtrm_device_registry') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveDeviceRegistry(reg) {
+  localStorage.setItem('dtrm_device_registry', JSON.stringify(reg));
+}
+function checkDeviceLock(googleId) {
+  const reg = getDeviceRegistry();
+  if (!reg[googleId]) return { allowed: true, registeredDevice: null };
+  if (reg[googleId] === DEVICE_ID) return { allowed: true, registeredDevice: DEVICE_ID };
+  return { allowed: false, registeredDevice: reg[googleId] };
+}
+function registerDevice(googleId) {
+  const reg = getDeviceRegistry();
+  reg[googleId] = DEVICE_ID;
+  saveDeviceRegistry(reg);
+}
+
+// ============================================================
+// AUTH STATE
+// ============================================================
+let currentUser = null; // { id, name, email, picture, isGuest }
+let adiUnlocked = localStorage.getItem('dtrm_adi') === '1';
+let selectedCentreId = null;
+let currentRouteData = null;
+let navInterval = null;
+let mapInstance = null;
+let mapInitialized = false;
+let centreMarkers = {};
+
+// Show device ID in auth screen
+document.getElementById('auth-device-id').textContent = DEVICE_ID;
+
+// ============================================================
+// GOOGLE SIGN-IN INIT
+// ============================================================
+window.onload = function() {
+  // Init Google Identity Services
+  if (window.google && google.accounts) {
+    google.accounts.id.initialize({
+      client_id: '1060725074195-example.apps.googleusercontent.com', // Replace with real client ID
+      callback: handleGoogleCredential,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      ux_mode: 'popup'
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('google-signin-btn'),
+      { theme: 'filled_black', size: 'large', width: 280, text: 'signin_with', shape: 'pill' }
+    );
+  }
+
+  // Check if already signed in
+  const savedUser = localStorage.getItem('dtrm_user');
+  if (savedUser) {
+    try {
+      const u = JSON.parse(savedUser);
+      currentUser = u;
+      launchApp(u);
+      return;
+    } catch(e) {}
+  }
+
+  // Show auth screen
+  document.getElementById('auth-screen').classList.remove('hidden');
+};
+
+function handleGoogleCredential(response) {
+  // Decode JWT payload (base64)
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  const googleId = payload.sub;
+  const lock = checkDeviceLock(googleId);
+  if (!lock.allowed) {
+    // Show locked screen
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('locked-device-id').textContent = DEVICE_ID;
+    document.getElementById('registered-device-id').textContent = lock.registeredDevice;
+    document.getElementById('locked-screen').classList.add('show');
+    return;
+  }
+  registerDevice(googleId);
+  const user = { id: googleId, name: payload.name, email: payload.email, picture: payload.picture, isGuest: false };
+  localStorage.setItem('dtrm_user', JSON.stringify(user));
+  currentUser = user;
+  launchApp(user);
+}
+
+function skipAuth() {
+  const user = { id: 'guest_' + DEVICE_ID, name: 'Guest', email: '', picture: '', isGuest: true };
+  localStorage.setItem('dtrm_user', JSON.stringify(user));
+  currentUser = user;
+  document.getElementById('locked-screen').classList.remove('show');
+  launchApp(user);
+}
+
+function forceThisDevice() {
+  // Force re-register this device (overwrite old one)
+  const savedUser = localStorage.getItem('dtrm_user');
+  if (savedUser) {
+    try {
+      const u = JSON.parse(savedUser);
+      if (u.id) { registerDevice(u.id); launchApp(u); return; }
+    } catch(e) {}
+  }
+  // If no saved user, just skip as guest
+  skipAuth();
+}
+
+function signOut() {
+  localStorage.removeItem('dtrm_user');
+  currentUser = null;
+  closeModal('user-modal');
+  // Hide app, show auth
+  document.getElementById('main-header').style.display = 'none';
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('main-tabs').style.display = 'none';
+  document.getElementById('auth-screen').classList.remove('hidden');
+  showToast('Signed out successfully');
+}
+
+function launchApp(user) {
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('locked-screen').classList.remove('show');
+  document.getElementById('main-header').style.display = '';
+  document.getElementById('main-content').style.display = '';
+  document.getElementById('main-tabs').style.display = '';
+
+  // Update UI with user info
+  const av = document.getElementById('user-avatar');
+  if (user.picture) {
+    av.innerHTML = '<img src="'+user.picture+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.parentNode.textContent=\'👤\'">';
+  } else {
+    av.textContent = user.isGuest ? '👤' : (user.name ? user.name[0].toUpperCase() : '👤');
+  }
+  document.getElementById('settings-user-name').textContent = user.isGuest ? 'Guest (not signed in)' : user.name + ' · ' + user.email;
+  document.getElementById('settings-device-id').textContent = DEVICE_ID;
+
+  // Load app data
+  renderCentresList(testCentres);
+  updateAnalytics();
+  updateSettingsUI();
+  syncAppMetaCounts();
+  refreshResumeNavigationUI();
+
+  // Load map immediately
+  loadLeaflet();
+
+  setTimeout(() => {
+    if (getSavedNavigationState()) showResumeNavigationModal();
+  }, 350);
+}
+
+function showUserModal() {
+  if (!currentUser) return;
+  document.getElementById('user-modal-name').textContent = currentUser.isGuest ? 'Guest Account' : currentUser.name;
+  document.getElementById('user-modal-email').textContent = currentUser.isGuest ? 'Not signed in. Sign in to enable device locking.' : currentUser.email;
+  document.getElementById('user-modal-device').textContent = DEVICE_ID;
+  document.getElementById('user-modal').classList.add('open');
+}
+
+
+function getTotalRoutesCount() {
+  return testCentres.reduce((sum, centre) => sum + routeData.standard(centre).length + routeData.adi(centre).length, 0);
+}
+
+function syncAppMetaCounts() {
+  const centreCount = testCentres.length;
+  const routeCount = getTotalRoutesCount();
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value.toLocaleString('en-GB');
+  };
+  ['app-centre-count-auth','app-centre-count-header','app-centre-count-subtitle','app-centre-count-card','app-centre-count-settings'].forEach(id => setText(id, centreCount));
+  ['app-route-count-auth','app-route-count-header','app-route-count-card','app-route-count-settings'].forEach(id => setText(id, routeCount));
+}
+
+function getSavedNavigationState() {
+  try {
+    const raw = localStorage.getItem(NAV_RESUME_KEY);
+    if (!raw) return null;
+    const state = JSON.parse(raw);
+    if (!state || !state.savedAt) return null;
+    if (Date.now() - state.savedAt > NAV_RESUME_MAX_AGE_MS) {
+      localStorage.removeItem(NAV_RESUME_KEY);
+      return null;
+    }
+    return state;
+  } catch (e) {
+    localStorage.removeItem(NAV_RESUME_KEY);
+    return null;
+  }
+}
+
+function saveNavigationState(reason = 'autosave') {
+  if (!navCurrentCentre || !navCurrentRoute || !navCurrentSteps.length) return;
+  const modalOpen = document.getElementById('nav-modal') && document.getElementById('nav-modal').classList.contains('open');
+  const state = {
+    centreId: navCurrentCentre.id,
+    routeNum: navCurrentRoute.routeNum,
+    isAdi: !!navCurrentRoute.isAdi,
+    phase: navPhase,
+    stepIdx: navCurrentStepIdx,
+    savedAt: Date.now(),
+    reason,
+    routeName: `${navCurrentRoute.isAdi ? 'ADI Route' : 'Standard Route'} ${navCurrentRoute.routeNum}`,
+    centreName: navCurrentCentre.name,
+    modalOpen,
+    lastKnownLat: navLastKnownPosition ? navLastKnownPosition.lat : null,
+    lastKnownLng: navLastKnownPosition ? navLastKnownPosition.lng : null
+  };
+  localStorage.setItem(NAV_RESUME_KEY, JSON.stringify(state));
+  refreshResumeNavigationUI();
+}
+
+function clearSavedNavigationState() {
+  localStorage.removeItem(NAV_RESUME_KEY);
+  refreshResumeNavigationUI();
+}
+
+function refreshResumeNavigationUI() {
+  const item = document.getElementById('resume-nav-item');
+  const summary = document.getElementById('resume-nav-summary');
+  const state = getSavedNavigationState();
+  if (!item || !summary) return;
+  if (!state) {
+    item.style.display = 'none';
+    return;
+  }
+  item.style.display = 'flex';
+  const minsAgo = Math.max(1, Math.round((Date.now() - state.savedAt) / 60000));
+  summary.textContent = `${state.centreName} · ${state.routeName} · saved ${minsAgo} min ago`;
+}
+
+function showResumeNavigationModal() {
+  const state = getSavedNavigationState();
+  if (!state) {
+    showToast('No saved navigation found');
+    return;
+  }
+  const text = document.getElementById('resume-nav-text');
+  const detail = document.getElementById('resume-nav-detail');
+  if (text) text.textContent = 'We found a saved route in progress. Choose how you want to continue.';
+  if (detail) {
+    const phaseText = state.phase === 2 ? 'Driving the test route' : 'Heading to the test centre';
+    detail.innerHTML = `<strong>${state.centreName}</strong><br>${state.routeName}<br>${phaseText} · step ${Math.min((state.stepIdx || 0) + 1, 99)}`;
+  }
+  document.getElementById('resume-nav-modal').classList.add('open');
+}
+
+function resumeSavedNavigation(mode) {
+  const state = getSavedNavigationState();
+  if (!state) {
+    showToast('Saved route expired');
+    return;
+  }
+  closeModal('resume-nav-modal');
+  openRealNavigation(state.centreId, state.routeNum, state.isAdi, { resumeState: state, resumeMode: mode });
+}
+
+function discardSavedNavigation() {
+  clearSavedNavigationState();
+  closeModal('resume-nav-modal');
+  showToast('Saved route discarded');
+}
+
+function estimateStepIndexFromLocation(lat, lng) {
+  const points = navRouteInstructionPoints.length ? navRouteInstructionPoints : navCurrentWaypoints;
+  if (!points.length) return navCurrentStepIdx || 0;
+  let bestIndex = 0;
+  let bestDist = Infinity;
+  points.forEach((wp, idx) => {
+    const dist = distanceBetweenPointsMeters(lat, lng, wp.lat, wp.lng);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIndex = idx;
+    }
+  });
+  const approx = Math.round((bestIndex / Math.max(1, points.length - 1)) * Math.max(0, navCurrentSteps.length - 1));
+  return Math.max(navCurrentStepIdx || 0, Math.min(approx, Math.max(0, navCurrentSteps.length - 1)));
+}
+
+window.addEventListener('beforeunload', () => {
+  if (navCurrentCentre && navCurrentRoute) saveNavigationState('beforeunload');
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && navCurrentCentre && navCurrentRoute) saveNavigationState('hidden');
+});
+
+// ============================================================
+// TEST CENTRES DATA (all from user's list + existing data)
+// ============================================================
+
+
+// ============================================================
+// ROUTE DATA
+// ============================================================
+const routeData = {
+  standard: (centre) => Array.from({length:15}, (_, i) => `Standard Route ${i+1}`),
+  adi: (centre) => Array.from({length:7}, (_, i) => `ADI Route ${i+1}`)
+};
+
+const testCentres = [
+  // ===== ENGLAND - LONDON (comprehensive) =====
+  {id:1,name:"Barking",town:"Barking",region:"England",lat:51.5397,lng:0.0820},
+  {id:2,name:"Barnet",town:"Barnet",region:"England",lat:51.6500,lng:-0.1980},
+  {id:3,name:"Belvedere",town:"Belvedere",region:"England",lat:51.4900,lng:0.1500},
+  {id:4,name:"Borehamwood",town:"Borehamwood",region:"England",lat:51.6579,lng:-0.2723},
+  {id:5,name:"Chingford",town:"Chingford",region:"England",lat:51.6320,lng:-0.0160},
+  {id:6,name:"Croydon",town:"Croydon",region:"England",lat:51.3762,lng:-0.0982},
+  {id:7,name:"Enfield",town:"Enfield",region:"England",lat:51.6520,lng:-0.0808},
+  {id:8,name:"Goodmayes",town:"Ilford",region:"England",lat:51.5630,lng:0.0990},
+  {id:9,name:"Greenford",town:"Greenford",region:"England",lat:51.5390,lng:-0.3490},
+  {id:10,name:"Hayes",town:"Hayes",region:"England",lat:51.5067,lng:-0.4178},
+  {id:11,name:"Hendon",town:"Hendon",region:"England",lat:51.5919,lng:-0.2395},
+  {id:12,name:"Hither Green",town:"Hither Green",region:"England",lat:51.4530,lng:-0.0050},
+  {id:13,name:"Hornchurch",town:"Hornchurch",region:"England",lat:51.5570,lng:0.2150},
+  {id:14,name:"Isleworth",town:"Isleworth",region:"England",lat:51.4740,lng:-0.3360},
+  {id:15,name:"Loughton",town:"Loughton",region:"England",lat:51.6460,lng:0.0570},
+  {id:16,name:"Mill Hill",town:"Mill Hill",region:"England",lat:51.6118,lng:-0.2478},
+  {id:17,name:"Mitcham",town:"Mitcham",region:"England",lat:51.4040,lng:-0.1620},
+  {id:18,name:"Morden",town:"Morden",region:"England",lat:51.4026,lng:-0.1947},
+  {id:19,name:"Pinner",town:"Pinner",region:"England",lat:51.5935,lng:-0.3800},
+  {id:20,name:"Watford",town:"Watford",region:"England",lat:51.6820,lng:-0.3930},
+  {id:21,name:"Yeading",town:"Yeading",region:"England",lat:51.5150,lng:-0.3980},
+  {id:22,name:"Wood Green",town:"Wood Green",region:"England",lat:51.5970,lng:-0.1090},
+  {id:23,name:"Wanstead",town:"Wanstead",region:"England",lat:51.5683,lng:0.0280},
+  {id:24,name:"Norbury",town:"Norbury",region:"England",lat:51.4060,lng:-0.1210},
+  {id:25,name:"Tolworth",town:"Tolworth",region:"England",lat:51.3780,lng:-0.2830},
+  {id:26,name:"Brent",town:"Wembley",region:"England",lat:51.5540,lng:-0.2680},
+  {id:27,name:"Chiswick",town:"Chiswick",region:"England",lat:51.4930,lng:-0.2650},
+  {id:28,name:"Eltham",town:"Eltham",region:"England",lat:51.4530,lng:0.0540},
+  {id:29,name:"Hammersmith",town:"Hammersmith",region:"England",lat:51.4921,lng:-0.2240},
+  {id:30,name:"Hornsey",town:"Hornsey",region:"England",lat:51.5870,lng:-0.1200},
+  {id:31,name:"Heston",town:"Heston",region:"England",lat:51.4810,lng:-0.3790},
+  {id:32,name:"Erith",town:"Erith",region:"England",lat:51.4800,lng:0.1780},
+  {id:33,name:"Ashford (Middlesex)",town:"Ashford",region:"England",lat:51.4330,lng:-0.4650},
+  // ===== ENGLAND - HOME COUNTIES =====
+  {id:34,name:"Basildon",town:"Basildon",region:"England",lat:51.5779,lng:0.4880},
+  {id:35,name:"Bishops Stortford",town:"Bishops Stortford",region:"England",lat:51.8710,lng:0.1620},
+  {id:36,name:"Brentwood",town:"Brentwood",region:"England",lat:51.6200,lng:0.3050},
+  {id:37,name:"Chelmsford",town:"Chelmsford",region:"England",lat:51.7356,lng:0.4685},
+  {id:38,name:"Colchester",town:"Colchester",region:"England",lat:51.8880,lng:0.8910},
+  {id:39,name:"Clacton-on-Sea",town:"Clacton-on-Sea",region:"England",lat:51.7890,lng:1.1570},
+  {id:40,name:"Guildford",town:"Guildford",region:"England",lat:51.2362,lng:-0.5704},
+  {id:41,name:"Letchworth",town:"Letchworth",region:"England",lat:51.9780,lng:-0.2270},
+  {id:42,name:"Luton",town:"Luton",region:"England",lat:51.8787,lng:-0.4200},
+  {id:43,name:"Oxford",town:"Oxford",region:"England",lat:51.7520,lng:-1.2577},
+  {id:44,name:"Reading",town:"Reading",region:"England",lat:51.4543,lng:-0.9781},
+  {id:45,name:"Slough",town:"Slough",region:"England",lat:51.5105,lng:-0.5950},
+  {id:46,name:"Southend-on-Sea",town:"Southend-on-Sea",region:"England",lat:51.5459,lng:0.7077},
+  {id:47,name:"Stevenage",town:"Stevenage",region:"England",lat:51.9020,lng:-0.2020},
+  {id:48,name:"Windsor",town:"Windsor",region:"England",lat:51.4810,lng:-0.6080},
+  {id:49,name:"Worthing",town:"Worthing",region:"England",lat:50.8120,lng:-0.3720},
+  {id:50,name:"Hornchurch",town:"Hornchurch",region:"England",lat:51.5570,lng:0.2150},
+  // ===== ENGLAND - SOUTH =====
+  {id:51,name:"Bath",town:"Bath",region:"England",lat:51.3837,lng:-2.3599},
+  {id:52,name:"Bournemouth",town:"Bournemouth",region:"England",lat:50.7192,lng:-1.8808},
+  {id:53,name:"Brighton",town:"Brighton",region:"England",lat:50.8290,lng:-0.1450},
+  {id:54,name:"Bristol",town:"Bristol",region:"England",lat:51.4490,lng:-2.5810},
+  {id:55,name:"Canterbury",town:"Canterbury",region:"England",lat:51.2797,lng:1.0797},
+  {id:56,name:"Dorchester",town:"Dorchester",region:"England",lat:50.7154,lng:-2.4347},
+  {id:57,name:"Dover",town:"Dover",region:"England",lat:51.1279,lng:1.3134},
+  {id:58,name:"Eastbourne",town:"Eastbourne",region:"England",lat:50.7685,lng:0.2900},
+  {id:59,name:"Exeter",town:"Exeter",region:"England",lat:50.7184,lng:-3.5339},
+  {id:60,name:"Folkestone",town:"Folkestone",region:"England",lat:51.0820,lng:1.1660},
+  {id:61,name:"Maidstone",town:"Maidstone",region:"England",lat:51.2720,lng:0.5210},
+  {id:62,name:"Plymouth",town:"Plymouth",region:"England",lat:50.3755,lng:-4.1427},
+  {id:63,name:"Portsmouth",town:"Portsmouth",region:"England",lat:50.8197,lng:-1.0873},
+  {id:64,name:"Southampton",town:"Southampton",region:"England",lat:50.9097,lng:-1.4044},
+  {id:65,name:"Swindon",town:"Swindon",region:"England",lat:51.5558,lng:-1.7797},
+  {id:66,name:"Taunton",town:"Taunton",region:"England",lat:51.0151,lng:-3.1013},
+  {id:67,name:"Truro",town:"Truro",region:"England",lat:50.2632,lng:-5.0510},
+  {id:68,name:"Tunbridge Wells",town:"Tunbridge Wells",region:"England",lat:51.1320,lng:0.2630},
+  // ===== ENGLAND - MIDLANDS =====
+  {id:69,name:"Birmingham Hamstead",town:"Birmingham",region:"England",lat:52.5200,lng:-1.9340},
+  {id:70,name:"Birmingham Kingstanding",town:"Birmingham",region:"England",lat:52.5350,lng:-1.8900},
+  {id:71,name:"Birmingham Shirley",town:"Birmingham",region:"England",lat:52.4100,lng:-1.8200},
+  {id:72,name:"Birmingham South Yardley",town:"Birmingham",region:"England",lat:52.4640,lng:-1.8020},
+  {id:73,name:"Burton upon Trent",town:"Burton upon Trent",region:"England",lat:52.8020,lng:-1.6430},
+  {id:74,name:"Coventry",town:"Coventry",region:"England",lat:52.4068,lng:-1.5197},
+  {id:75,name:"Derby",town:"Derby",region:"England",lat:52.9100,lng:-1.4630},
+  {id:76,name:"Dudley",town:"Dudley",region:"England",lat:52.5119,lng:-2.0810},
+  {id:77,name:"Hereford",town:"Hereford",region:"England",lat:52.0565,lng:-2.7160},
+  {id:78,name:"Leicester",town:"Leicester",region:"England",lat:52.6369,lng:-1.1398},
+  {id:79,name:"Lichfield",town:"Lichfield",region:"England",lat:52.6820,lng:-1.8270},
+  {id:80,name:"Lincoln",town:"Lincoln",region:"England",lat:53.2307,lng:-0.5406},
+  {id:81,name:"Loughborough",town:"Loughborough",region:"England",lat:52.7721,lng:-1.2062},
+  {id:82,name:"Mansfield",town:"Mansfield",region:"England",lat:53.1442,lng:-1.1966},
+  {id:83,name:"Milton Keynes",town:"Milton Keynes",region:"England",lat:52.0406,lng:-0.7594},
+  {id:84,name:"Northampton",town:"Northampton",region:"England",lat:52.2405,lng:-0.9027},
+  {id:85,name:"Nottingham",town:"Nottingham",region:"England",lat:52.9548,lng:-1.1581},
+  {id:86,name:"Peterborough",town:"Peterborough",region:"England",lat:52.5736,lng:-0.2430},
+  {id:87,name:"Shrewsbury",town:"Shrewsbury",region:"England",lat:52.7077,lng:-2.7540},
+  {id:88,name:"Stafford",town:"Stafford",region:"England",lat:52.8040,lng:-2.1170},
+  {id:89,name:"Stoke-on-Trent",town:"Stoke-on-Trent",region:"England",lat:53.0027,lng:-2.1794},
+  {id:90,name:"Telford",town:"Telford",region:"England",lat:52.6752,lng:-2.4454},
+  {id:91,name:"Walsall",town:"Walsall",region:"England",lat:52.5861,lng:-1.9820},
+  {id:92,name:"Wolverhampton",town:"Wolverhampton",region:"England",lat:52.5851,lng:-2.1288},
+  {id:93,name:"Worcester",town:"Worcester",region:"England",lat:52.1920,lng:-2.2209},
+  // ===== ENGLAND - EAST =====
+  {id:94,name:"Bury St Edmunds",town:"Bury St Edmunds",region:"England",lat:52.2430,lng:0.7160},
+  {id:95,name:"Cambridge",town:"Cambridge",region:"England",lat:52.1970,lng:0.1460},
+  {id:96,name:"Ipswich",town:"Ipswich",region:"England",lat:52.0567,lng:1.1482},
+  {id:97,name:"Kings Lynn",town:"Kings Lynn",region:"England",lat:52.7540,lng:0.4020},
+  {id:98,name:"Norwich",town:"Norwich",region:"England",lat:52.6309,lng:1.2974},
+  {id:99,name:"Peterborough",town:"Peterborough",region:"England",lat:52.5736,lng:-0.2430},
+  // ===== ENGLAND - NORTH =====
+  {id:100,name:"Barnsley",town:"Barnsley",region:"England",lat:53.5527,lng:-1.4797},
+  {id:101,name:"Blackburn",town:"Blackburn",region:"England",lat:53.7480,lng:-2.4850},
+  {id:102,name:"Blackpool",town:"Blackpool",region:"England",lat:53.8175,lng:-3.0357},
+  {id:103,name:"Bolton",town:"Bolton",region:"England",lat:53.5781,lng:-2.4282},
+  {id:104,name:"Bradford",town:"Bradford",region:"England",lat:53.7960,lng:-1.7594},
+  {id:105,name:"Bury",town:"Bury",region:"England",lat:53.5933,lng:-2.2987},
+  {id:106,name:"Carlisle",town:"Carlisle",region:"England",lat:54.8951,lng:-2.9382},
+  {id:107,name:"Chester",town:"Chester",region:"England",lat:53.1905,lng:-2.8910},
+  {id:108,name:"Doncaster",town:"Doncaster",region:"England",lat:53.5228,lng:-1.1282},
+  {id:109,name:"Gateshead",town:"Gateshead",region:"England",lat:54.9563,lng:-1.6030},
+  {id:110,name:"Grimsby",town:"Grimsby",region:"England",lat:53.5675,lng:-0.0796},
+  {id:111,name:"Halifax",town:"Halifax",region:"England",lat:53.7249,lng:-1.8612},
+  {id:112,name:"Hartlepool",town:"Hartlepool",region:"England",lat:54.6860,lng:-1.2130},
+  {id:113,name:"Huddersfield",town:"Huddersfield",region:"England",lat:53.6458,lng:-1.7858},
+  {id:114,name:"Kingston Upon Hull",town:"Hull",region:"England",lat:53.7457,lng:-0.3367},
+  {id:115,name:"Lancaster",town:"Lancaster",region:"England",lat:54.0466,lng:-2.8007},
+  {id:116,name:"Leeds",town:"Leeds",region:"England",lat:53.8008,lng:-1.5491},
+  {id:117,name:"Liverpool",town:"Liverpool",region:"England",lat:53.4084,lng:-2.9916},
+  {id:118,name:"Manchester Didsbury",town:"Manchester",region:"England",lat:53.4120,lng:-2.2300},
+  {id:119,name:"Manchester Stretford",town:"Manchester",region:"England",lat:53.4460,lng:-2.2940},
+  {id:120,name:"Middlesbrough",town:"Middlesbrough",region:"England",lat:54.5742,lng:-1.2350},
+  {id:121,name:"Newcastle",town:"Newcastle",region:"England",lat:54.9783,lng:-1.6178},
+  {id:122,name:"Oldham",town:"Oldham",region:"England",lat:53.5409,lng:-2.1114},
+  {id:123,name:"Preston",town:"Preston",region:"England",lat:53.7632,lng:-2.7031},
+  {id:124,name:"Rochdale",town:"Rochdale",region:"England",lat:53.6097,lng:-2.1560},
+  {id:125,name:"Rotherham",town:"Rotherham",region:"England",lat:53.4326,lng:-1.3635},
+  {id:126,name:"Scarborough",town:"Scarborough",region:"England",lat:54.2777,lng:-0.4019},
+  {id:127,name:"Sheffield",town:"Sheffield",region:"England",lat:53.3811,lng:-1.4701},
+  {id:128,name:"Southport",town:"Southport",region:"England",lat:53.6450,lng:-3.0060},
+  {id:129,name:"Stockport",town:"Stockport",region:"England",lat:53.4060,lng:-2.1570},
+  {id:130,name:"Sunderland",town:"Sunderland",region:"England",lat:54.9069,lng:-1.3838},
+  {id:131,name:"Wakefield",town:"Wakefield",region:"England",lat:53.6830,lng:-1.4980},
+  {id:132,name:"Warrington",town:"Warrington",region:"England",lat:53.3900,lng:-2.5970},
+  {id:133,name:"Wigan",town:"Wigan",region:"England",lat:53.5448,lng:-2.6318},
+  {id:134,name:"York",town:"York",region:"England",lat:53.9590,lng:-1.0815},
+  {id:135,name:"Boston",town:"Lincolnshire",region:"England",lat:52.9761,lng:-0.0219},
+  // ===== SCOTLAND =====
+  {id:136,name:"Aberdeen",town:"Aberdeen",region:"Scotland",lat:57.1497,lng:-2.0943},
+  {id:137,name:"Ayr",town:"Ayr",region:"Scotland",lat:55.4628,lng:-4.6294},
+  {id:138,name:"Bathgate",town:"Bathgate",region:"Scotland",lat:55.9025,lng:-3.6440},
+  {id:139,name:"Dumfries",town:"Dumfries",region:"Scotland",lat:55.0700,lng:-3.6050},
+  {id:140,name:"Dundee",town:"Dundee",region:"Scotland",lat:56.4620,lng:-2.9707},
+  {id:141,name:"Dunfermline",town:"Dunfermline",region:"Scotland",lat:56.0718,lng:-3.4393},
+  {id:142,name:"Edinburgh Currie",town:"Edinburgh",region:"Scotland",lat:55.8985,lng:-3.3060},
+  {id:143,name:"Edinburgh Musselburgh",town:"Edinburgh",region:"Scotland",lat:55.9420,lng:-3.0510},
+  {id:144,name:"Elgin",town:"Elgin",region:"Scotland",lat:57.6490,lng:-3.3150},
+  {id:145,name:"Falkirk",town:"Falkirk",region:"Scotland",lat:56.0019,lng:-3.7839},
+  {id:146,name:"Fort William",town:"Fort William",region:"Scotland",lat:56.8198,lng:-5.1052},
+  {id:147,name:"Glasgow Anniesland",town:"Glasgow",region:"Scotland",lat:55.8875,lng:-4.3270},
+  {id:148,name:"Glasgow Baillieston",town:"Glasgow",region:"Scotland",lat:55.8520,lng:-4.1540},
+  {id:149,name:"Glasgow Shieldhall",town:"Glasgow",region:"Scotland",lat:55.8470,lng:-4.3310},
+  {id:150,name:"Glasgow Springburn",town:"Glasgow",region:"Scotland",lat:55.8860,lng:-4.2370},
+  {id:151,name:"Greenock",town:"Greenock",region:"Scotland",lat:55.9440,lng:-4.7520},
+  {id:152,name:"Hamilton",town:"Hamilton",region:"Scotland",lat:55.7770,lng:-4.0380},
+  {id:153,name:"Inverness",town:"Inverness",region:"Scotland",lat:57.4778,lng:-4.2247},
+  {id:154,name:"Kilmarnock",town:"Kilmarnock",region:"Scotland",lat:55.6114,lng:-4.4958},
+  {id:155,name:"Kirkcaldy",town:"Kirkcaldy",region:"Scotland",lat:56.1120,lng:-3.1590},
+  {id:156,name:"Motherwell",town:"Motherwell",region:"Scotland",lat:55.7912,lng:-3.9882},
+  {id:157,name:"Oban",town:"Oban",region:"Scotland",lat:56.4130,lng:-5.4720},
+  {id:158,name:"Paisley",town:"Paisley",region:"Scotland",lat:55.8460,lng:-4.4240},
+  {id:159,name:"Perth",town:"Perth",region:"Scotland",lat:56.3950,lng:-3.4310},
+  {id:160,name:"Peterhead",town:"Peterhead",region:"Scotland",lat:57.5050,lng:-1.7820},
+  {id:161,name:"Stirling",town:"Stirling",region:"Scotland",lat:56.1165,lng:-3.9369},
+  // ===== WALES =====
+  {id:162,name:"Bangor",town:"Bangor",region:"Wales",lat:53.2270,lng:-4.1280},
+  {id:163,name:"Bridgend",town:"Bridgend",region:"Wales",lat:51.5040,lng:-3.5770},
+  {id:164,name:"Cardiff Fairwater",town:"Cardiff",region:"Wales",lat:51.4990,lng:-3.2340},
+  {id:165,name:"Cardiff Llanishen",town:"Cardiff",region:"Wales",lat:51.5320,lng:-3.1750},
+  {id:166,name:"Carmarthen",town:"Carmarthen",region:"Wales",lat:51.8570,lng:-4.3120},
+  {id:167,name:"Llandrindod Wells",town:"Llandrindod Wells",region:"Wales",lat:52.2440,lng:-3.3820},
+  {id:168,name:"Llanelli",town:"Llanelli",region:"Wales",lat:51.6850,lng:-4.1640},
+  {id:169,name:"Merthyr Tydfil",town:"Merthyr Tydfil",region:"Wales",lat:51.7460,lng:-3.3790},
+  {id:170,name:"Newport",town:"Newport",region:"Wales",lat:51.5842,lng:-2.9977},
+  {id:171,name:"Pontypridd",town:"Pontypridd",region:"Wales",lat:51.6020,lng:-3.3420},
+  {id:172,name:"Swansea",town:"Swansea",region:"Wales",lat:51.6214,lng:-3.9436},
+  {id:173,name:"Wrexham",town:"Wrexham",region:"Wales",lat:53.0460,lng:-2.9940},
+  // ===== NORTHERN IRELAND =====
+  {id:174,name:"Belfast",town:"Belfast",region:"Northern Ireland",lat:54.5973,lng:-5.9301},
+  {id:175,name:"Ballymena",town:"Ballymena",region:"Northern Ireland",lat:54.8640,lng:-6.2770},
+  {id:176,name:"Bangor NI",town:"Bangor",region:"Northern Ireland",lat:54.6530,lng:-5.6680},
+  {id:177,name:"Derry Londonderry",town:"Derry",region:"Northern Ireland",lat:54.9966,lng:-7.3086},
+  {id:178,name:"Newry",town:"Newry",region:"Northern Ireland",lat:54.1760,lng:-6.3490},
+  {id:179,name:"Newtownabbey",town:"Newtownabbey",region:"Northern Ireland",lat:54.6670,lng:-5.9100},
+  // ===== IRELAND =====
+  {id:180,name:"Cork",town:"Cork",region:"Ireland",lat:51.8985,lng:-8.4756},
+  {id:181,name:"Dublin Northside",town:"Dublin",region:"Ireland",lat:53.3834,lng:-6.2411},
+  {id:182,name:"Dublin Southside",town:"Dublin",region:"Ireland",lat:53.3148,lng:-6.2603},
+  {id:183,name:"Galway",town:"Galway",region:"Ireland",lat:53.2707,lng:-9.0568},
+  {id:184,name:"Limerick",town:"Limerick",region:"Ireland",lat:52.6638,lng:-8.6267},
+  {id:185,name:"Waterford",town:"Waterford",region:"Ireland",lat:52.2593,lng:-7.1101},
+  {id:186,name:"Drogheda",town:"Drogheda",region:"Ireland",lat:53.7179,lng:-6.3572},
+  {id:187,name:"Dundalk",town:"Dundalk",region:"Ireland",lat:53.9978,lng:-6.4053},
+  {id:188,name:"Athlone",town:"Athlone",region:"Ireland",lat:53.4239,lng:-7.9407},
+  {id:189,name:"Kilkenny",town:"Kilkenny",region:"Ireland",lat:52.6541,lng:-7.2448},
+  {id:190,name:"Sligo",town:"Sligo",region:"Ireland",lat:54.2697,lng:-8.4694}
+];
+
+
+
+// ============================================================
+// REAL MAP NAVIGATION - OSRM + Leaflet
+// Uses OSRM public API for real road routing
+// Phase 1: Navigate from user's location to test centre
+// Phase 2: Drive the actual test route from the centre
+// ============================================================
+
+let navMap = null;
+let navControl = null;
+let navWatchId = null;
+let navPhase = 1; // 1 = going to centre, 2 = doing test route
+let navCurrentCentre = null;
+let navCurrentRoute = null;
+let navCurrentSteps = [];
+let navCurrentStepIdx = 0;
+let navSpeech = null;
+let navUserMarker = null;
+let navRouteLayer = null;
+let navStarted = false;
+let navCurrentWaypoints = [];
+let navLastKnownPosition = null;
+let navAutoAdvanceLock = false;
+let navCurrentDistanceToCentreMeters = null;
+let navRouteGeometry = [];
+let navRouteInstructionPoints = [];
+let navRejoinTarget = null;
+let navRejoinLayer = null;
+const NAV_START_RADIUS_MILES = 0.5;
+const NAV_START_RADIUS_METERS = 804.67;
+const NAV_OFF_ROUTE_THRESHOLD_METERS = 120;
+const NAV_REJOIN_THRESHOLD_METERS = 55;
+const NAV_GOOGLE_MAX_WAYPOINTS = 8;
+const NAV_RESUME_KEY = 'dtrm_nav_resume_v12';
+const NAV_RESUME_MAX_AGE_MS = 1000 * 60 * 120;
+
+function toRadians(value) {
+  return value * Math.PI / 180;
+}
+
+function distanceBetweenPointsMeters(lat1, lng1, lat2, lng2) {
+  const earthRadius = 6371000;
+  const dLat = toRadians(lat2 - lat1);
+  const dLng = toRadians(lng2 - lng1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadius * c;
+}
+
+function formatDistanceMiles(meters) {
+  const miles = meters / 1609.344;
+  if (miles < 0.1) return miles.toFixed(2) + ' miles';
+  if (miles < 10) return miles.toFixed(1) + ' miles';
+  return Math.round(miles) + ' miles';
+}
+
+function formatDistanceMetersShort(meters) {
+  if (!Number.isFinite(meters)) return '';
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  return `${(meters / 1000).toFixed(1)} km`;
+}
+
+function buildOsrmRouteUrl(waypoints) {
+  const coords = waypoints.map(w => `${w.lng},${w.lat}`).join(';');
+  return `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`;
+}
+
+async function fetchOsrmRouteForWaypoints(waypoints) {
+  if (!Array.isArray(waypoints) || waypoints.length < 2) return null;
+  const response = await fetch(buildOsrmRouteUrl(waypoints));
+  const data = await response.json();
+  return data && data.routes && data.routes[0] ? data.routes[0] : null;
+}
+
+function getSanitizedStepInstruction(step) {
+  if (!step) return '';
+  const instruction = (step.maneuver && step.maneuver.instruction) || step.name || step.ref || '';
+  return String(instruction || '').trim();
+}
+
+function buildPhase2StepBundleFromRoute(route, centre) {
+  const steps = [];
+  const instructionPoints = [];
+  (route.legs || []).forEach((leg) => {
+    (leg.steps || []).forEach((step) => {
+      const instruction = getSanitizedStepInstruction(step);
+      if (!instruction) return;
+      steps.push(instruction);
+      const loc = step.maneuver && step.maneuver.location;
+      if (Array.isArray(loc) && loc.length >= 2) {
+        instructionPoints.push({ lat: loc[1], lng: loc[0] });
+      }
+    });
+  });
+  if (!steps.length) return null;
+  steps.push(`🏁 Return to ${centre.name} Test Centre`);
+  instructionPoints.push({ lat: centre.lat, lng: centre.lng });
+  return { steps, instructionPoints };
+}
+
+function drawCurrentRouteGeometry(color = '#3b82f6', dashArray = null) {
+  if (!navMap) return;
+  if (navRouteLayer) navMap.removeLayer(navRouteLayer);
+  const coords = (navRouteGeometry.length ? navRouteGeometry : navCurrentWaypoints).map(p => [p.lat, p.lng]);
+  navRouteLayer = L.polyline(coords, {
+    color,
+    weight: 5,
+    opacity: 0.9,
+    dashArray
+  }).addTo(navMap);
+}
+
+function renderPhase2RouteOnMap() {
+  const isAdi = !!(navCurrentRoute && navCurrentRoute.isAdi);
+  drawCurrentRouteGeometry(isAdi ? '#f59e0b' : '#3b82f6', null);
+}
+
+function refreshGoogleButtonState() {
+  const btn = document.getElementById('nav-google-btn');
+  if (!btn) return;
+  btn.disabled = !navCurrentCentre;
+  btn.style.opacity = navCurrentCentre ? '1' : '0.5';
+}
+
+function buildGoogleMapsNavigationUrl() {
+  if (!navCurrentCentre) return '';
+  const phase2 = navPhase === 2 && navCurrentWaypoints.length;
+  const startPoint = navLastKnownPosition || navCurrentWaypoints[0] || navCurrentCentre;
+  let destination = navCurrentCentre;
+  let waypoints = [];
+
+  if (phase2) {
+    const nearest = navLastKnownPosition ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng) : null;
+    const startIdx = nearest ? Math.min(nearest.index + 1, Math.max(0, navCurrentWaypoints.length - 1)) : 1;
+    const remaining = navCurrentWaypoints.slice(startIdx);
+    destination = remaining.length ? remaining[remaining.length - 1] : navCurrentCentre;
+    waypoints = remaining.slice(0, Math.max(0, remaining.length - 1)).slice(0, NAV_GOOGLE_MAX_WAYPOINTS);
+  }
+
+  const params = new URLSearchParams({
+    api: '1',
+    origin: `${startPoint.lat},${startPoint.lng}`,
+    destination: `${destination.lat},${destination.lng}`,
+    travelmode: 'driving',
+    dir_action: 'navigate'
+  });
+
+  if (waypoints.length) {
+    params.set('waypoints', waypoints.map(p => `${p.lat},${p.lng}`).join('|'));
+  }
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+function openInGoogleMaps() {
+  const url = buildGoogleMapsNavigationUrl();
+  if (!url) {
+    showToast('Navigation destination not ready yet');
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
+}
+
+function getNearestRoutePoint(lat, lng) {
+  const points = navRouteGeometry.length ? navRouteGeometry : navCurrentWaypoints;
+  if (!points.length) return null;
+  let bestIndex = 0;
+  let bestDist = Infinity;
+  points.forEach((point, index) => {
+    const dist = distanceBetweenPointsMeters(lat, lng, point.lat, point.lng);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIndex = index;
+    }
+  });
+  return { index: bestIndex, distanceMeters: bestDist, point: points[bestIndex] };
+}
+
+function clearRejoinRouteOverlay() {
+  if (navRejoinLayer && navMap) {
+    navMap.removeLayer(navRejoinLayer);
+  }
+  navRejoinLayer = null;
+  navRejoinTarget = null;
+}
+
+function hideOffRouteCard() {
+  const card = document.getElementById('offroute-card');
+  if (card) card.style.display = 'none';
+}
+
+function showOffRouteCard(distanceMeters) {
+  const card = document.getElementById('offroute-card');
+  const meta = document.getElementById('offroute-meta');
+  if (!card || !meta) return;
+  meta.innerHTML = `You are about <strong>${formatDistanceMetersShort(distanceMeters)}</strong> away from the planned route line. Keep our route, rejoin it, or hand off to Google Maps.`;
+  card.style.display = 'block';
+}
+
+function ensureNavStartChoiceCard() {
+  let card = document.getElementById('nav-start-choice');
+  if (card) return card;
+  const navBottom = document.getElementById('nav-bottom');
+  if (!navBottom) return null;
+  card = document.createElement('div');
+  card.id = 'nav-start-choice';
+  card.style.display = 'none';
+  card.style.background = 'rgba(17,34,64,0.96)';
+  card.style.border = '1px solid #1e3a5f';
+  card.style.borderRadius = '14px';
+  card.style.padding = '14px';
+  card.style.marginBottom = '12px';
+  card.innerHTML = `
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#fff;">Choose how to start this route</div>
+    <div id="nav-start-choice-text" style="font-size:12px;line-height:1.6;color:var(--grey);margin-bottom:12px;"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="nav-btn nav-btn-next" style="width:100%;justify-content:center;" onclick="chooseNavStartMode('remaining-route')">🛣️ Start the remaining route</button>
+      <button class="nav-btn nav-btn-begin" style="width:100%;justify-content:center;" onclick="chooseNavStartMode('centre-first')">📍 Navigate to the test centre first</button>
+    </div>
+  `;
+  const stepsList = document.getElementById('nav-steps-list');
+  navBottom.insertBefore(card, stepsList || null);
+  return card;
+}
+
+function hideNavStartChoiceCard() {
+  const card = document.getElementById('nav-start-choice');
+  if (card) card.style.display = 'none';
+}
+
+function showNavStartChoiceCard(distanceMeters) {
+  const card = ensureNavStartChoiceCard();
+  if (!card) return;
+  const textEl = document.getElementById('nav-start-choice-text');
+  const isWithinRadius = typeof distanceMeters === 'number' && distanceMeters <= NAV_START_RADIUS_METERS;
+  if (textEl) {
+    textEl.innerHTML = isWithinRadius
+      ? `You are <strong>within ${NAV_START_RADIUS_MILES} mile</strong> of ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}. You can start the remaining route now, or drive to the test centre first.`
+      : `You are about <strong>${formatDistanceMiles(distanceMeters)}</strong> from ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}. You can either start following the remaining route from where you are, or navigate to the test centre first.`;
+  }
+  card.style.display = 'block';
+}
+
+function chooseNavStartMode(mode) {
+  hideNavStartChoiceCard();
+  if (!navCurrentCentre) return;
+  if (mode === 'centre-first') {
+    renderRouteToCentrePreview(navCurrentCentre);
+    return;
+  }
+  const stepIdx = navLastKnownPosition ? estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng) : 0;
+  const directStartState = {
+    phase: 2,
+    stepIdx,
+    lastKnownLat: navLastKnownPosition ? navLastKnownPosition.lat : null,
+    lastKnownLng: navLastKnownPosition ? navLastKnownPosition.lng : null
+  };
+  const startMode = navCurrentDistanceToCentreMeters !== null && navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS ? 'radius-start' : 'continue';
+  startPhase2Navigation(directStartState, startMode);
+}
+
+function renderRouteToCentrePreview(centre) {
+  if (!navLastKnownPosition) {
+    startPhase2Navigation();
+    return;
+  }
+  const userLat = navLastKnownPosition.lat;
+  const userLng = navLastKnownPosition.lng;
+  document.getElementById('nav-instruction').textContent = '📍 Calculating the route to the test centre...';
+  document.getElementById('nav-phase-label').textContent = '📍 Phase 1: Navigating to Test Centre';
+  document.getElementById('nav-begin-btn').style.display = 'inline-flex';
+  document.getElementById('nav-controls').style.display = 'none';
+  const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${centre.lng},${centre.lat}?overview=full&geometries=geojson&steps=true`;
+  fetch(osrmUrl)
+    .then(r => r.json())
+    .then(data => {
+      if (data.routes && data.routes[0]) {
+        const route = data.routes[0];
+        const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+        if (navRouteLayer) navMap.removeLayer(navRouteLayer);
+        navRouteLayer = L.polyline(coords, {color:'#34d399', weight:5, opacity:0.9}).addTo(navMap);
+        const distKm = (route.distance / 1000).toFixed(1);
+        const mins = Math.round(route.duration / 60);
+        document.getElementById('nav-instruction').textContent = `🚗 Navigate to ${centre.name} Test Centre · ${distKm}km · ~${mins} min`;
+        document.getElementById('nav-phase-label').textContent = `📍 Phase 1: Drive to Test Centre (${distKm}km away)`;
+        const phase1Steps = route.legs[0].steps.map(s => s.maneuver.instruction || s.name).filter(Boolean).slice(0, 8);
+        document.getElementById('nav-steps-list').innerHTML =
+          phase1Steps.map((s, i) => `<div class="nav-step ${i===0?'nav-step-active':''}">${i+1}. ${s}</div>`).join('') +
+          `<div class="nav-step nav-step-dest">🏢 Arrive at ${centre.name} Test Centre</div>`;
+        speak(phase1Steps[0] || `Head to ${centre.name} Test Centre`);
+        const bounds = L.latLngBounds([[userLat, userLng], [centre.lat, centre.lng]]);
+        navMap.fitBounds(bounds, {padding: [40, 40]});
+      } else {
+        startPhase2Navigation();
+      }
+    })
+    .catch(() => startPhase2Navigation());
+}
+
+// Centre-specific route waypoints (real lat/lng)
+// For each centre we generate realistic waypoints around the actual centre location
+function getRouteWaypoints(centre, routeNum, isAdi) {
+  const safeRouteNum = Math.max(1, parseInt(routeNum, 10) || 1);
+  const lat = centre.lat;
+  const lng = centre.lng;
+  // Generate realistic waypoints in a loop around the centre
+  // Each route uses a slightly different offset pattern
+  const offset = 0.008 + (safeRouteNum * 0.002);
+  const adiOffset = isAdi ? 0.005 : 0;
+  const seed = safeRouteNum + (isAdi ? 100 : 0);
+  
+  // Create a varied route loop
+  const patterns = [
+    // Pattern A: North loop
+    [{lat:lat+offset, lng:lng},{lat:lat+offset*0.8, lng:lng+offset},{lat:lat, lng:lng+offset*1.2},{lat:lat-offset*0.5, lng:lng+offset*0.8},{lat:lat-offset*0.3, lng:lng}],
+    // Pattern B: East loop  
+    [{lat:lat, lng:lng+offset},{lat:lat-offset*0.8, lng:lng+offset*0.9},{lat:lat-offset, lng:lng},{lat:lat-offset*0.5, lng:lng-offset*0.5},{lat:lat, lng:lng-offset*0.3}],
+    // Pattern C: South loop
+    [{lat:lat-offset, lng:lng},{lat:lat-offset*0.9, lng:lng+offset*0.8},{lat:lat-offset*0.3, lng:lng+offset},{lat:lat+offset*0.3, lng:lng+offset*0.5},{lat:lat+offset*0.2, lng:lng}],
+    // Pattern D: West loop
+    [{lat:lat, lng:lng-offset},{lat:lat+offset*0.7, lng:lng-offset*0.8},{lat:lat+offset, lng:lng},{lat:lat+offset*0.4, lng:lng+offset*0.4},{lat:lat, lng:lng+offset*0.2}],
+    // Pattern E: Large loop
+    [{lat:lat+offset+adiOffset, lng:lng+offset*0.5},{lat:lat+offset*0.5, lng:lng+offset+adiOffset},{lat:lat-offset*0.3, lng:lng+offset+adiOffset},{lat:lat-offset-adiOffset, lng:lng},{lat:lat-offset*0.5, lng:lng-offset*0.5}],
+  ];
+  
+  const patIdx = ((safeRouteNum - 1) % patterns.length + patterns.length) % patterns.length;
+  const selectedPattern = Array.isArray(patterns[patIdx]) ? patterns[patIdx] : patterns[0];
+  const waypoints = [
+    {lat: lat, lng: lng}, // Start: test centre
+    ...selectedPattern,
+    {lat: lat, lng: lng}  // End: back to test centre
+  ];
+  return waypoints;
+}
+
+// Get route-specific turn-by-turn instructions based on centre
+function getRouteSteps(centre, routeNum, isAdi) {
+  // Centre-specific street names
+  const centreStreets = {
+    'Pinner': ['Tolcarne Drive','Joel Street','Pinner Road','Rickmansworth Road','Ducks Hill Road','Bury Street','Eastcote Road','Field End Road','Marsh Road','Elm Park Road','Pinner Hill Road','High Street Pinner','Cuckoo Hill Road','Cannon Lane','Waxwell Lane'],
+    'Hendon': ['Aviation Drive','Beaufort Square','Caversham Road','Aerodrome Road','Colindale Avenue','Edgware Road','W Hendon Broadway','Watford Way','N Circular Road','Nether Street','Holders Hill Circus','Parson Street','Greyhound Hill','Station Road','Brent Street'],
+    'Mill Hill': ['Bunns Lane','Flower Lane','The Broadway','Mill Hill Circus','Watford Way A41','Edgware Way','Spur Road','Stonegrove','Burnt Oak Broadway','Edgware Road','W Hendon Broadway','North Circular Road A406','Brent Cross Flyover','Hendon Way','Barnet Bypass'],
+    'Watford': ['Otterspool Way','St Albans Road A412','Rickmansworth Road A4125','Hempstead Road','Langley Road','Cassiobury Park','High Street Watford','Queens Road','King Street','Lower High Street','Bushey Mill Lane','North Western Avenue','Beechen Grove','Clarendon Road','The Parade'],
+    'Borehamwood': ['Stirling Way','Shenley Road','Brook Road','Elstree Way','Leeming Road','Manor Way','Aycliffe Road','Furzehill Road','Station Road','Theobald Street','Hartforde Road','Banks Road','Warwick Road','Cameron Close','Cowley Hill'],
+    'Greenford': ['Horsenden Lane North','Robin Hood Way','Whitton Avenue East','Greenford Road','Western Avenue A40','Argyle Road','Lady Margaret Road','Windmill Lane','Ruislip Road','Oldfield Lane North','Ferrymead Avenue','Rockware Avenue','Springfield Road','Costons Lane','Braund Avenue'],
+    'Yeading': ['Cygnet Way','Willow Tree Lane','Hayes Bypass A312','Kingshill Avenue','Yeading Lane','Rayners Lane','Granville Road','The Parkway','Charville Lane','Uxbridge Road','Colham Avenue','Coldharbour Lane','Church Road Hayes','North Hyde Road','Springfield Road']
+  };
+  
+  const streets = centreStreets[centre.name] || [
+    'High Street','Church Road','Station Road','Park Avenue','Victoria Road',
+    'Manor Drive','Bridge Street','Market Place','Castle Road','Mill Lane',
+    'Kings Road','Green Lane','School Lane','The Avenue','London Road'
+  ];
+  
+  const numSteps = isAdi ? 12 : 10;
+  const steps = [];
+  
+  steps.push(`🏢 Start at ${centre.name} Test Centre - exit onto ${streets[0]}`);
+  
+  const dirActions = [
+    'Turn left onto','Turn right onto','Continue straight onto','Bear left onto',
+    'At the roundabout take exit 2 onto','At the mini-roundabout turn left onto',
+    'At the traffic lights turn right onto','Turn left at the junction onto',
+    'Bear right and continue onto','Follow the road onto'
+  ];
+  
+  for (let i = 1; i < numSteps - 1; i++) {
+    const street = streets[i % streets.length];
+    const action = dirActions[i % dirActions.length];
+    const dist = [200, 300, 400, 500, 600, 800, 1000][i % 7];
+    steps.push(`${action} ${street} (${dist}m)`);
+  }
+  
+  steps.push(`🏢 Return to ${centre.name} Test Centre`);
+  return steps;
+}
+
+// Open the navigation modal with real map
+function openRealNavigation(centreId, routeNum, isAdi, options = {}) {
+  const centre = testCentres.find(c => c.id === centreId);
+  if (!centre) return;
+
+  const resumeState = options.resumeState || null;
+  const resumeMode = options.resumeMode || 'restart';
+
+  navCurrentCentre = centre;
+  navCurrentRoute = { routeNum, isAdi };
+  navCurrentSteps = getRouteSteps(centre, routeNum, isAdi);
+  navCurrentWaypoints = getRouteWaypoints(centre, routeNum, isAdi);
+  navCurrentStepIdx = Math.max(0, Math.min(resumeState && resumeState.phase === 2 ? (resumeState.stepIdx || 0) : 0, navCurrentSteps.length - 1));
+  navPhase = (resumeState && resumeState.phase === 2 && resumeMode !== 'restart') ? 2 : 1;
+  navStarted = navPhase === 2;
+  navLastKnownPosition = resumeState && resumeState.lastKnownLat ? { lat: resumeState.lastKnownLat, lng: resumeState.lastKnownLng } : null;
+  navCurrentDistanceToCentreMeters = resumeState && resumeState.lastKnownLat ? distanceBetweenPointsMeters(resumeState.lastKnownLat, resumeState.lastKnownLng, centre.lat, centre.lng) : null;
+
+  const modal = document.getElementById('nav-modal');
+  if (modal) {
+    modal.classList.add('open');
+    document.getElementById('nav-route-title').textContent = `${isAdi ? 'ADI Route' : 'Standard Route'} ${routeNum} · ${centre.name}`;
+    document.getElementById('nav-phase-label').textContent = navPhase === 2 ? '🛣️ Phase 2: Driving the Test Route' : '🧭 Choose how to start this route';
+    document.getElementById('nav-instruction').textContent = resumeState ? 'Restoring your saved navigation...' : 'Getting your location...';
+    document.getElementById('nav-step-counter').textContent = `Step ${Math.min(navCurrentStepIdx + 1, navCurrentSteps.length)} / ${navCurrentSteps.length}`;
+    document.getElementById('nav-begin-btn').style.display = 'none';
+    document.getElementById('nav-controls').style.display = 'none';
+  }
+
+  clearRejoinRouteOverlay();
+  hideOffRouteCard();
+  refreshGoogleButtonState();
+  hideNavStartChoiceCard();
+  saveNavigationState(resumeState ? 'resume-open' : 'open');
+  setTimeout(() => initNavMap(centre, routeNum, isAdi, options), 200);
+}
+
+function initNavMap(centre, routeNum, isAdi, options = {}) {
+  const mapEl = document.getElementById('nav-map');
+  if (!mapEl) return;
+  
+  // Destroy old map
+  if (navMap) {
+    navMap.remove();
+    navMap = null;
+  }
+  
+  navMap = L.map('nav-map', {
+    center: [centre.lat, centre.lng],
+    zoom: 14,
+    zoomControl: true
+  });
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(navMap);
+  
+  // Add test centre marker
+  L.marker([centre.lat, centre.lng], {
+    icon: L.divIcon({
+      html: '<div style="background:#e63946;color:white;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:bold;white-space:nowrap">🏢 Test Centre</div>',
+      className: '',
+      iconAnchor: [40, 20]
+    })
+  }).addTo(navMap).bindPopup(`<b>${centre.name}</b><br>Test Centre`);
+  
+  // Draw the test route on the map
+  const waypoints = navCurrentWaypoints.length ? navCurrentWaypoints : getRouteWaypoints(centre, routeNum, isAdi);
+  navCurrentWaypoints = waypoints;
+  navRouteGeometry = waypoints.map(w => ({ lat: w.lat, lng: w.lng }));
+  navRouteInstructionPoints = waypoints.map(w => ({ lat: w.lat, lng: w.lng }));
+  renderPhase2RouteOnMap();
+
+  // Add route waypoint markers
+  waypoints.forEach((wp, i) => {
+    if (i === 0 || i === waypoints.length - 1) return;
+    L.circleMarker([wp.lat, wp.lng], {
+      radius: 5,
+      color: isAdi ? '#f59e0b' : '#3b82f6',
+      fillColor: '#fff',
+      fillOpacity: 1,
+      weight: 2
+    }).addTo(navMap);
+  });
+
+  if (navRouteLayer) {
+    navMap.fitBounds(navRouteLayer.getBounds(), {padding: [30, 30]});
+  }
+
+  fetchOsrmRouteForWaypoints(waypoints)
+    .then(route => {
+      if (!route) return;
+      const coords = (route.geometry && route.geometry.coordinates || []).map(c => ({ lat: c[1], lng: c[0] }));
+      if (coords.length) navRouteGeometry = coords;
+      const bundle = buildPhase2StepBundleFromRoute(route, centre);
+      if (bundle) {
+        navCurrentSteps = bundle.steps;
+        navRouteInstructionPoints = bundle.instructionPoints;
+        navCurrentStepIdx = Math.min(navCurrentStepIdx, Math.max(0, navCurrentSteps.length - 1));
+      }
+      renderPhase2RouteOnMap();
+      if (navRouteLayer) navMap.fitBounds(navRouteLayer.getBounds(), {padding: [30, 30]});
+      if (navPhase === 2) renderNavSteps();
+    })
+    .catch(() => null)
+    .finally(() => refreshGoogleButtonState());
+  
+  // Try to get user location for phase 1 or resume phase 2
+  getUserLocationForNav(centre, options);
+}
+
+function getUserLocationForNav(centre, options = {}) {
+  if (options.resumeState && options.resumeState.phase === 2 && options.resumeMode !== 'restart') {
+    startPhase2Navigation(options.resumeState, options.resumeMode);
+    return;
+  }
+  if (!navigator.geolocation) {
+    startPhase2Navigation();
+    return;
+  }
+
+  document.getElementById('nav-instruction').textContent = '📍 Getting your location...';
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const userLat = pos.coords.latitude;
+      const userLng = pos.coords.longitude;
+      navLastKnownPosition = { lat: userLat, lng: userLng };
+      navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(userLat, userLng, centre.lat, centre.lng);
+
+      if (navUserMarker) navMap.removeLayer(navUserMarker);
+      navUserMarker = L.marker([userLat, userLng], {
+        icon: L.divIcon({
+          html: '<div style="background:#34d399;color:white;padding:4px 8px;border-radius:50%;font-size:14px;">📍</div>',
+          className: '',
+          iconAnchor: [16, 16]
+        })
+      }).addTo(navMap);
+
+      const bounds = L.latLngBounds([[userLat, userLng], [centre.lat, centre.lng]]);
+      navMap.fitBounds(bounds, {padding: [40, 40]});
+      document.getElementById('nav-phase-label').textContent = '🧭 Choose how to start this route';
+      document.getElementById('nav-instruction').textContent = `You are ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} from ${centre.name}. Choose how you want to start this route.`;
+      document.getElementById('nav-steps-list').innerHTML = `
+        <div class="nav-step nav-step-active">1. Start the remaining route from your current location.</div>
+        <div class="nav-step">2. Or navigate to ${centre.name} Test Centre first, then start the route there.</div>
+        <div class="nav-step">3. If you are within ${NAV_START_RADIUS_MILES} mile of the centre, you can begin the actual route straight away.</div>
+      `;
+      document.getElementById('nav-begin-btn').style.display = 'none';
+      document.getElementById('nav-controls').style.display = 'none';
+      showNavStartChoiceCard(navCurrentDistanceToCentreMeters);
+    },
+    () => startPhase2Navigation(),
+    {timeout: 8000, enableHighAccuracy: true}
+  );
+}
+
+function startPhase2Navigation(resumeState = null, resumeMode = 'restart') {
+  navPhase = 2;
+  if (resumeState && resumeMode !== 'restart') {
+    navCurrentStepIdx = Math.max(0, Math.min(resumeState.stepIdx || 0, navCurrentSteps.length - 1));
+  } else {
+    navCurrentStepIdx = 0;
+  }
+
+  clearRejoinRouteOverlay();
+  hideOffRouteCard();
+  hideNavStartChoiceCard();
+  document.getElementById('nav-phase-label').textContent = '🛣️ Phase 2: Driving the Test Route';
+
+  const centre = navCurrentCentre;
+  if (navMap && centre) {
+    renderPhase2RouteOnMap();
+    if (navLastKnownPosition && (resumeMode === 'continue' || resumeMode === 'radius-start' || resumeMode === 'rejoin')) {
+      const bounds = navRouteLayer ? navRouteLayer.getBounds() : L.latLngBounds([[centre.lat, centre.lng]]);
+      bounds.extend([navLastKnownPosition.lat, navLastKnownPosition.lng]);
+      navMap.fitBounds(bounds, {padding: [30, 30]});
+    } else {
+      navMap.setView([centre.lat, centre.lng], 14);
+    }
+  }
+
+  document.getElementById('nav-begin-btn').style.display = 'none';
+  document.getElementById('nav-controls').style.display = 'flex';
+  refreshGoogleButtonState();
+
+  if (resumeMode === 'radius-start') {
+    document.getElementById('nav-instruction').textContent = `You are within ${NAV_START_RADIUS_MILES} mile of ${centre ? centre.name : 'the test centre'}. Starting the route from your current location...`;
+  } else if (resumeState && resumeMode === 'continue') {
+    document.getElementById('nav-instruction').textContent = 'Resuming route from your current location...';
+  } else if (resumeState && resumeMode === 'rejoin') {
+    document.getElementById('nav-instruction').textContent = 'Guiding you back to the nearest point on the route...';
+  } else if (resumeMode === 'continue') {
+    document.getElementById('nav-instruction').textContent = 'Starting the remaining route from your current location...';
+  }
+
+  renderNavSteps();
+  speakCurrentStep();
+  startGPSTracking(resumeMode);
+  if (resumeMode === 'rejoin') rejoinCurrentRoute();
+  saveNavigationState(resumeState ? 'resume-phase2' : 'phase2');
+}
+
+function renderNavSteps() {
+  const list = document.getElementById('nav-steps-list');
+  if (!list) return;
+  list.innerHTML = navCurrentSteps.map((s, i) => 
+    `<div class="nav-step ${i === navCurrentStepIdx ? 'nav-step-active' : i < navCurrentStepIdx ? 'nav-step-done' : ''}" id="navstep-${i}">${i+1}. ${s}</div>`
+  ).join('');
+  
+  document.getElementById('nav-instruction').textContent = navCurrentSteps[navCurrentStepIdx] || 'Route complete!';
+  saveNavigationState('render-step');
+  document.getElementById('nav-step-counter').textContent = `Step ${navCurrentStepIdx + 1} / ${navCurrentSteps.length}`;
+  refreshGoogleButtonState();
+  
+  // Scroll active step into view
+  const activeEl = document.getElementById(`navstep-${navCurrentStepIdx}`);
+  if (activeEl) activeEl.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function nextNavStep() {
+  if (navCurrentStepIdx < navCurrentSteps.length - 1) {
+    navCurrentStepIdx++;
+    renderNavSteps();
+    speakCurrentStep();
+    saveNavigationState('prev-step');
+    saveNavigationState('next-step');
+  } else {
+    // Route complete
+    document.getElementById('nav-instruction').textContent = '✅ Route Complete! Return to test centre.';
+    clearSavedNavigationState();
+    speak('Route complete. Well done!');
+  }
+}
+
+function prevNavStep() {
+  if (navCurrentStepIdx > 0) {
+    navCurrentStepIdx--;
+    renderNavSteps();
+    speakCurrentStep();
+  }
+}
+
+function speakCurrentStep() {
+  const step = navCurrentSteps[navCurrentStepIdx];
+  if (step) speak(step);
+}
+
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  const cleanText = text.replace(/[🏢📍🛣️✅🚗]/g, '');
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(cleanText);
+  utt.lang = 'en-GB';
+  utt.rate = 0.95;
+  utt.pitch = 1.0;
+  // Use a British voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const britishVoice = voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en'));
+  if (britishVoice) utt.voice = britishVoice;
+  window.speechSynthesis.speak(utt);
+}
+
+
+function continueFromCurrentLocation() {
+  if (!navLastKnownPosition) {
+    showToast('Current location unavailable');
+    return;
+  }
+  clearRejoinRouteOverlay();
+  hideOffRouteCard();
+  navCurrentStepIdx = estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng);
+  renderNavSteps();
+  speakCurrentStep();
+  showToast('Continuing from your current location');
+}
+
+async function rejoinCurrentRoute() {
+  if (!navLastKnownPosition || !navMap) {
+    showToast('Current location unavailable');
+    return;
+  }
+  const nearest = getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
+  if (!nearest || !nearest.point) {
+    showToast('Route line not ready yet');
+    return;
+  }
+  clearRejoinRouteOverlay();
+  navRejoinTarget = nearest;
+  try {
+    const route = await fetchOsrmRouteForWaypoints([
+      { lat: navLastKnownPosition.lat, lng: navLastKnownPosition.lng },
+      nearest.point
+    ]);
+    if (route && route.geometry && route.geometry.coordinates) {
+      const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+      navRejoinLayer = L.polyline(coords, {
+        color: '#34d399',
+        weight: 4,
+        opacity: 0.95,
+        dashArray: '8,8'
+      }).addTo(navMap);
+      const mins = Math.max(1, Math.round((route.duration || 0) / 60));
+      document.getElementById('nav-instruction').textContent = `↩ Rejoin the planned route in about ${formatDistanceMetersShort(route.distance || nearest.distanceMeters)} · ${mins} min`;
+    } else {
+      document.getElementById('nav-instruction').textContent = `↩ Head back to the route line (${formatDistanceMetersShort(nearest.distanceMeters)})`;
+    }
+  } catch (e) {
+    document.getElementById('nav-instruction').textContent = `↩ Head back to the route line (${formatDistanceMetersShort(nearest.distanceMeters)})`;
+  }
+  showToast('Guiding you back to the planned route');
+}
+
+function startGPSTracking(resumeMode = 'restart') {
+  if (!navigator.geolocation) return;
+  if (navWatchId) navigator.geolocation.clearWatch(navWatchId);
+
+  navWatchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      navLastKnownPosition = { lat, lng };
+      refreshGoogleButtonState();
+
+      if (!navUserMarker) {
+        navUserMarker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            html: '<div style="background:#34d399;border:3px solid white;border-radius:50%;width:18px;height:18px;"></div>',
+            className: '',
+            iconAnchor: [9, 9]
+          })
+        }).addTo(navMap);
+      } else {
+        navUserMarker.setLatLng([lat, lng]);
+      }
+
+      if (navPhase === 2 && navCurrentSteps.length) {
+        const matchedIdx = estimateStepIndexFromLocation(lat, lng);
+        if (matchedIdx > navCurrentStepIdx && !navAutoAdvanceLock) {
+          navAutoAdvanceLock = true;
+          navCurrentStepIdx = matchedIdx;
+          renderNavSteps();
+          if (resumeMode !== 'rejoin') speakCurrentStep();
+          setTimeout(() => navAutoAdvanceLock = false, 1500);
+        }
+
+        const nearest = getNearestRoutePoint(lat, lng);
+        if (nearest && nearest.distanceMeters > NAV_OFF_ROUTE_THRESHOLD_METERS && !navRejoinTarget) {
+          showOffRouteCard(nearest.distanceMeters);
+        } else if (nearest && nearest.distanceMeters <= NAV_OFF_ROUTE_THRESHOLD_METERS) {
+          hideOffRouteCard();
+        }
+
+        if (navRejoinTarget) {
+          const distToRejoin = distanceBetweenPointsMeters(lat, lng, navRejoinTarget.point.lat, navRejoinTarget.point.lng);
+          if (distToRejoin <= NAV_REJOIN_THRESHOLD_METERS) {
+            clearRejoinRouteOverlay();
+            hideOffRouteCard();
+            navCurrentStepIdx = Math.max(navCurrentStepIdx, estimateStepIndexFromLocation(lat, lng));
+            renderNavSteps();
+            speakCurrentStep();
+            showToast('You are back on the planned route');
+          }
+        }
+      }
+
+      if (navMap) navMap.panTo([lat, lng], {animate: true});
+      saveNavigationState('gps-update');
+    },
+    null,
+    {enableHighAccuracy: true, maximumAge: 2000}
+  );
+}
+
+function stopNavigation() {
+  if (navWatchId) {
+    navigator.geolocation.clearWatch(navWatchId);
+    navWatchId = null;
+  }
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  hideNavStartChoiceCard();
+  hideOffRouteCard();
+  clearRejoinRouteOverlay();
+  const modal = document.getElementById('nav-modal');
+  if (modal) modal.classList.remove('open');
+  if (navMap) { navMap.remove(); navMap = null; }
+  navStarted = false;
+  navPhase = 1;
+  navCurrentDistanceToCentreMeters = null;
+  navRouteGeometry = [];
+  navRouteInstructionPoints = [];
+}
+
+function beginTestRoute() {
+  if (navLastKnownPosition && navCurrentCentre) {
+    navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(navLastKnownPosition.lat, navLastKnownPosition.lng, navCurrentCentre.lat, navCurrentCentre.lng);
+    const stepIdx = estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng);
+    const directState = {
+      phase: 2,
+      stepIdx,
+      lastKnownLat: navLastKnownPosition.lat,
+      lastKnownLng: navLastKnownPosition.lng
+    };
+    const mode = navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS ? 'radius-start' : 'continue';
+    startPhase2Navigation(directState, mode);
+  } else {
+    startPhase2Navigation();
+  }
+  document.getElementById('nav-begin-btn').style.display = 'none';
+  document.getElementById('nav-controls').style.display = 'flex';
+  saveNavigationState('begin-test-route');
+}
+
+
+// CENTRES LIST
+// ============================================================
+let currentFilter = 'all';
+let currentSearch = '';
+
+function generateRouteSteps(centre, routeNum, isAdi) {
+  const streetNames = ['High Street','Church Road','Station Road','Park Lane','Victoria Road',
+    'Manor Drive','Bridge Street','Market Place','Castle Road','Mill Lane',
+    'Queensway','Kings Road','Green Lane','School Lane','The Avenue',
+    'London Road','Main Street','Town Centre','Ring Road','Bypass Road'];
+  const directions = ['Head north','Turn left onto','Turn right onto','Bear left onto',
+    'Bear right onto','At the roundabout take exit 2 onto','Continue along',
+    'At traffic lights turn left onto','At traffic lights turn right onto','Merge onto'];
+  const distances = ['150m','200m','300m','400m','500m','600m','0.3 miles','0.5 miles','0.7 miles'];
+
+  const steps = [];
+  const numSteps = isAdi ? 9 + routeNum : 6 + routeNum;
+  for (let i = 0; i < Math.min(numSteps, 12); i++) {
+    const d = directions[i % directions.length];
+    const s = streetNames[(routeNum + i * 3) % streetNames.length];
+    const dist = distances[(routeNum + i) % distances.length];
+    steps.push(`${d} ${s} (${dist})`);
+  }
+  steps.push(`Arrive back at ${centre.name} test centre`);
+  return steps;
+}
+
+// ============================================================
+// LEAFLET MAP
+// ============================================================
+function loadLeaflet() {
+  // Set map bg to navy immediately
+  const mapEl = document.getElementById('map');
+  if (mapEl) mapEl.style.background = '#0a1628';
+
+  if (window.L) { initMap(); return; }
+  // Load CSS
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+  document.head.appendChild(css);
+  // Load JS
+  const s = document.createElement('script');
+  s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  s.onload = initMap;
+  s.onerror = function() { showToast('Map tiles unavailable – check internet'); };
+  document.head.appendChild(s);
+}
+
+function initMap() {
+  if (mapInitialized) return;
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+  mapInitialized = true;
+
+  mapInstance = L.map('map', {
+    center: [54.5, -4.0],
+    zoom: 6,
+    zoomControl: true,
+    attributionControl: true
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 18,
+    minZoom: 4
+  }).addTo(mapInstance);
+
+  // Add all centre markers
+  testCentres.forEach(centre => {
+    const standardRoutes = routeData.standard(centre);
+    const adiRoutes = routeData.adi(centre);
+
+    const regionColor = {
+      'England':'#e63946','Scotland':'#34d399','Wales':'#a78bfa',
+      'Northern Ireland':'#fb923c','Ireland':'#4ade80'
+    }[centre.region] || '#e63946';
+
+    const marker = L.circleMarker([centre.lat, centre.lng], {
+      radius: 7,
+      fillColor: '#112240',
+      color: regionColor,
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.9
+    }).addTo(mapInstance);
+
+    // Build popup with route list
+    const stdChips = standardRoutes.map(r =>
+      `<span class="popup-chip" onclick="openRouteFromMap(${centre.id},'${r}',false)">${r.replace('Standard Route ','')}</span>`
+    ).join('');
+    const adiChips = adiRoutes.map(r =>
+      `<span class="popup-chip adi-chip" onclick="openRouteFromMap(${centre.id},'${r}',true)">${r.replace('ADI Route ','ADI ')}</span>`
+    ).join('');
+
+    const popupHTML = `
+      <div class="popup-title">${centre.name}</div>
+      <div class="popup-info">${centre.town} · ${centre.region}</div>
+      <div class="popup-routes">
+        <div class="popup-routes-title">Standard Routes</div>
+        <div class="popup-route-chips">${stdChips}</div>
+        <div class="popup-routes-title">ADI Routes <span style="color:var(--grey);font-weight:400;">(Pro)</span></div>
+        <div class="popup-route-chips">${adiChips}</div>
+      </div>
+      <button class="popup-btn" onclick="viewCentreRoutesById(${centre.id})">View All Routes →</button>
+    `;
+
+    marker.bindPopup(popupHTML, { maxWidth: 280, minWidth: 240 });
+    centreMarkers[centre.id] = marker;
+  });
+}
+
+// Called when user clicks a route chip in the map popup
+function openRouteFromMap(centreId, routeName, isAdi) {
+  if (isAdi && !adiUnlocked) {
+    showToast('ADI Pro required · Unlock in ADI Pro tab');
+    return;
+  }
+  const centre = testCentres.find(c => c.id === centreId);
+  if (!centre) return;
+  const routeNum = parseInt(routeName.replace(/\D+/g,'')) || 1;
+  const steps = generateRouteSteps(centre, routeNum, isAdi);
+
+  currentRouteData = { centre, routeName, isAdi, steps };
+  selectedCentreId = centreId;
+
+  document.getElementById('modal-route-name').textContent = routeName + ' · ' + centre.name;
+  document.getElementById('modal-route-desc').textContent = centre.town + ' · ' + centre.region + (isAdi ? ' · ADI Pro Route' : ' · Standard Route');
+  document.getElementById('modal-route-steps').innerHTML = steps.map((s,i)=>`<div>${i+1}. ${s}</div>`).join('');
+  document.getElementById('route-modal').classList.add('open');
+
+  // Track analytics
+  trackAnalytics('viewed');
+}
+
+function viewCentreRoutesById(centreId) {
+  selectedCentreId = centreId;
+  const centre = testCentres.find(c => c.id === centreId);
+  if (!centre) return;
+  // Close any popup
+  if (mapInstance) mapInstance.closePopup();
+  showTab('routes');
+  renderRoutesList(centre);
+}
+
+
+function renderCentresList(centres) {
+  const list = document.getElementById('centres-list');
+  if (!list) return;
+  const regionClass = {
+    'England':'region-england','Scotland':'region-scotland','Wales':'region-wales',
+    'Northern Ireland':'region-ni','Ireland':'region-ireland'
+  };
+  list.innerHTML = centres.map(c => `
+    <div class="centre-card" onclick="selectCentre(${c.id})">
+      <span class="centre-region ${regionClass[c.region]||'region-england'}">${c.region}</span>
+      <div class="centre-name">${c.name}</div>
+      <div class="centre-meta">
+        <span>📍 ${c.town}</span>
+        <span>🛣️ 15 Standard + ${c.id===72?5:7} ADI</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCentres(q) {
+  currentSearch = q.toLowerCase();
+  applyFilters();
+}
+
+function filterRegion(region, el) {
+  currentFilter = region;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  let filtered = testCentres;
+  if (currentFilter !== 'all') filtered = filtered.filter(c=>c.region===currentFilter);
+  if (currentSearch) filtered = filtered.filter(c=>
+    c.name.toLowerCase().includes(currentSearch)||c.town.toLowerCase().includes(currentSearch)
+  );
+  renderCentresList(filtered);
+}
+
+function selectCentre(id) {
+  selectedCentreId = id;
+  viewCentreRoutesById(id);
+}
+
+// ============================================================
+// ROUTES LIST
+// ============================================================
+function renderRoutesList(centre) {
+  const subtitle = document.getElementById('routes-subtitle');
+  const list = document.getElementById('routes-list');
+  if (!list) return;
+
+  subtitle.textContent = centre.name + ' · ' + centre.town;
+
+  const standardRoutes = routeData.standard(centre);
+  const adiRoutes = routeData.adi(centre);
+
+  let html = `<div class="section-divider">📋 Standard Routes (${standardRoutes.length})</div>`;
+  html += standardRoutes.map(r => {
+    const num = parseInt(r.replace(/\D+/g,''));
+    return `
+      <div class="route-card" onclick="openRoute(${centre.id},'${r}',false)">
+        <div class="route-header">
+          <div class="route-name">${r}</div>
+          <span class="route-badge badge-standard">Standard</span>
+        </div>
+        <div class="route-meta">🚗 ${centre.name} · Route overview available</div>
+        <div class="route-actions">
+          <button class="btn btn-nav" onclick="event.stopPropagation();openRealNavigation(${centre.id},parseInt('${r}'.replace(/\D+/g,'')),false)">🗺️ Navigate</button>
+          <button class="btn btn-outline" onclick="event.stopPropagation();openRoute(${centre.id},'${r}',false)">View Details</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  html += `<div class="section-divider" style="margin-top:12px;">👑 ADI Pro Routes (${adiRoutes.length})</div>`;
+  if (!adiUnlocked) {
+    html += `<div style="background:var(--navy-card);border-radius:10px;padding:16px;text-align:center;border:1px solid var(--gold);margin-bottom:10px;">
+      <div style="font-size:24px;margin-bottom:8px;">🔒</div>
+      <div style="font-weight:700;color:var(--gold);margin-bottom:6px;">ADI Pro Required</div>
+      <div style="font-size:12px;color:var(--grey);margin-bottom:12px;">Unlock ${adiRoutes.length} advanced routes for this centre</div>
+      <button class="btn btn-gold" onclick="showTab('adi')">Unlock ADI Pro</button>
+    </div>`;
+  } else {
+    html += adiRoutes.map(r => `
+      <div class="route-card" onclick="openRoute(${centre.id},'${r}',true)">
+        <div class="route-header">
+          <div class="route-name">${r}</div>
+          <span class="route-badge badge-adi">ADI Pro</span>
+        </div>
+        <div class="route-meta">🚗 ${centre.name} · Advanced instructor route</div>
+        <div class="route-actions">
+          <button class="btn btn-nav" onclick="event.stopPropagation();openRealNavigation(${centre.id},parseInt('${r}'.replace(/\D+/g,'')),true)">🗺️ Navigate</button>
+          <button class="btn btn-outline" onclick="event.stopPropagation();openRoute(${centre.id},'${r}',true)">View Details</button>
+        </div>
+      </div>`).join('');
+  }
+
+  list.innerHTML = html;
+  trackAnalytics('centre_explored', centre.id);
+}
+
+function openRoute(centreId, routeName, isAdi) {
+  if (isAdi && !adiUnlocked) { showTab('adi'); return; }
+  const centre = testCentres.find(c=>c.id===centreId);
+  if (!centre) return;
+  const routeNum = parseInt(routeName.replace(/\D+/g,'')) || 1;
+  const steps = generateRouteSteps(centre, routeNum, isAdi);
+  currentRouteData = { centre, routeName, isAdi, steps };
+  document.getElementById('modal-route-name').textContent = routeName + ' · ' + centre.name;
+  document.getElementById('modal-route-desc').textContent = centre.town + ' · ' + centre.region + (isAdi ? ' · ADI Pro' : ' · Standard');
+  document.getElementById('modal-route-steps').innerHTML = steps.map((s,i)=>`<div style="padding:3px 0;">${i+1}. ${s}</div>`).join('');
+  document.getElementById('route-modal').classList.add('open');
+  trackAnalytics('viewed');
+}
+
+function quickNav(centreId, routeName, isAdi) {
+  if (isAdi && !adiUnlocked) { showTab('adi'); return; }
+  const centre = testCentres.find(c=>c.id===centreId);
+  if (!centre) return;
+  const routeNum = parseInt(routeName.replace(/\D+/g,'')) || 1;
+  const steps = generateRouteSteps(centre, routeNum, isAdi);
+  currentRouteData = { centre, routeName, isAdi, steps };
+  startNavigationDirect();
+}
+
+function filterMapCentres(q) {
+  if (!mapInstance) return;
+  const term = (q || '').trim().toLowerCase();
+  if (!term) {
+    mapInstance.setView([54.5, -4.0], 6);
+    return;
+  }
+  const matches = testCentres.filter(c =>
+    c.name.toLowerCase().includes(term) || c.town.toLowerCase().includes(term)
+  );
+  if (!matches.length) return;
+  const centre = matches[0];
+  const marker = centreMarkers[centre.id];
+  mapInstance.setView([centre.lat, centre.lng], 13, {animate:true});
+  if (marker) {
+    setTimeout(() => marker.openPopup(), 250);
+  }
+}
+
+function showTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+
+  const tabEl = document.getElementById('tab-' + tabName);
+  if (tabEl) tabEl.classList.add('active');
+
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  const tabMap = { map:0, centres:1, routes:2, adi:3, analytics:4, settings:5 };
+  const idx = tabMap[tabName];
+  if (typeof idx === 'number' && tabs[idx]) tabs[idx].classList.add('active');
+
+  if (tabName === 'map' && mapInstance) {
+    setTimeout(() => mapInstance.invalidateSize(), 200);
+  }
+  if (tabName === 'centres') {
+    applyFilters();
+  }
+  if (tabName === 'routes') {
+    if (selectedCentreId) {
+      const centre = testCentres.find(c => c.id === selectedCentreId);
+      if (centre) renderRoutesList(centre);
+    } else {
+      const list = document.getElementById('routes-list');
+      if (list) list.innerHTML = '<div class="route-card">Select a centre first to view routes.</div>';
+    }
+  }
+}
+
+function locateUser() {
+  if (!navigator.geolocation) { showToast('Geolocation not supported'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    if (mapInstance) mapInstance.setView([pos.coords.latitude, pos.coords.longitude], 12);
+  }, () => showToast('Could not get location'));
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+let navStepIndex = 0;
+
+function startNavigation() {
+  if (!currentRouteData) return;
+  closeModal('route-modal');
+  showTab('routes');
+  const centre = currentRouteData.centre;
+  if (centre) renderRoutesList(centre);
+  setTimeout(startNavigationDirect, 300);
+}
+
+function startNavigationDirect() {
+  if (!currentRouteData) return;
+  showTab('routes');
+  const { centre, routeName, steps } = currentRouteData;
+  if (centre) renderRoutesList(centre);
+
+  navStepIndex = 0;
+  const navBar = document.getElementById('nav-bar');
+  navBar.classList.add('active');
+
+  // Show all steps
+  const stepsEl = document.getElementById('nav-steps');
+  stepsEl.innerHTML = steps.map((s,i) =>
+    `<div class="nav-step" id="navstep-${i}"><span class="step-num">${i+1}.</span><span>${s}</span></div>`
+  ).join('');
+
+  function updateStep() {
+    if (navStepIndex >= steps.length) { stopNavigation(); return; }
+    document.getElementById('nav-instruction').textContent = '🔊 ' + steps[navStepIndex];
+    const next = steps[navStepIndex + 1];
+    document.getElementById('nav-distance').textContent = next ? 'Next: ' + next : 'Arriving at destination';
+    // Highlight current step
+    document.querySelectorAll('.nav-step').forEach((el,i) => {
+      el.style.color = i === navStepIndex ? '#2ecc71' : 'var(--grey)';
+      el.style.fontWeight = i === navStepIndex ? '600' : '400';
+    });
+    // Voice
+    if (window.speechSynthesis && localStorage.getItem('dtrm_voice') !== '0') {
+      const u = new SpeechSynthesisUtterance(steps[navStepIndex]);
+      u.lang = 'en-GB'; u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+    }
+    navStepIndex++;
+  }
+
+  updateStep();
+  if (navInterval) clearInterval(navInterval);
+  navInterval = setInterval(updateStep, 4000);
+  trackAnalytics('navigated');
+  showToast('Navigation started for ' + routeName);
+}
+
+function stopNavigation() {
+  if (navInterval) { clearInterval(navInterval); navInterval = null; }
+  if (navWatchId) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  const navBar = document.getElementById('nav-bar');
+  if (navBar) navBar.classList.remove('active');
+  const modal = document.getElementById('nav-modal');
+  if (modal) modal.classList.remove('open');
+  if (navMap) { navMap.remove(); navMap = null; }
+  navCurrentCentre = null;
+  navCurrentRoute = null;
+  navCurrentSteps = [];
+  navCurrentWaypoints = [];
+  navCurrentStepIdx = 0;
+  navPhase = 1;
+  navLastKnownPosition = null;
+  clearSavedNavigationState();
+  showToast('Navigation stopped');
+}
+
+// ============================================================
+// ADI PRO
+// ============================================================
+let selectedPrice = 'onetime';
+function selectPrice(p) {
+  selectedPrice = p;
+  document.querySelectorAll('.price-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('price-'+p).classList.add('selected');
+  const prices = {onetime:'£3.99',monthly:'£0.99',yearly:'£7.99'};
+  document.getElementById('price-display').textContent = prices[p];
+}
+function purchaseADI() {
+  adiUnlocked = true;
+  localStorage.setItem('dtrm_adi','1');
+  document.getElementById('adi-content').style.display = 'none';
+  document.getElementById('adi-unlocked').style.display = 'block';
+  showToast('ADI Pro Unlocked! 🎉');
+}
+function startTrial() {
+  adiUnlocked = true;
+  localStorage.setItem('dtrm_adi','1');
+  localStorage.setItem('dtrm_trial_end', Date.now() + 86400000);
+  document.getElementById('adi-content').style.display = 'none';
+  document.getElementById('adi-unlocked').style.display = 'block';
+  showToast('24-hour trial started! 🎉');
+}
+
+// ============================================================
+// ANALYTICS
+// ============================================================
+function trackAnalytics(type, centreId) {
+  const data = JSON.parse(localStorage.getItem('dtrm_analytics') || '{}');
+  if (type === 'viewed') data.viewed = (data.viewed||0) + 1;
+  if (type === 'navigated') data.navigated = (data.navigated||0) + 1;
+  if (type === 'centre_explored' && centreId) {
+    if (!data.centres) data.centres = [];
+    if (!data.centres.includes(centreId)) data.centres.push(centreId);
+  }
+  // Streak
+  const today = new Date().toDateString();
+  if (data.lastDay !== today) {
+    data.streak = data.lastDay === new Date(Date.now()-86400000).toDateString() ? (data.streak||0)+1 : 1;
+    data.lastDay = today;
+  }
+  localStorage.setItem('dtrm_analytics', JSON.stringify(data));
+}
+
+function updateAnalytics() {
+  const data = JSON.parse(localStorage.getItem('dtrm_analytics') || '{}');
+  const viewed = data.viewed || 0;
+  const navigated = data.navigated || 0;
+  const centresCount = (data.centres || []).length;
+  const streak = data.streak || 0;
+
+  const el = id => document.getElementById(id);
+  if (el('stat-viewed')) el('stat-viewed').textContent = viewed;
+  if (el('stat-navigated')) el('stat-navigated').textContent = navigated;
+  if (el('stat-centres')) el('stat-centres').textContent = centresCount;
+  if (el('stat-streak')) el('stat-streak').textContent = streak;
+
+  const routesPct = Math.min(100, Math.round(viewed / 84 * 100));
+  const centresPct = Math.min(100, Math.round(centresCount / 190 * 100));
+  const overall = Math.round((routesPct + centresPct) / 2);
+  const setPct = (id, bar, val) => {
+    if (el(id)) el(id).textContent = val + '%';
+    if (el(bar)) el(bar).style.width = val + '%';
+  };
+  setPct('score-pct','score-bar',overall);
+  setPct('routes-pct','routes-bar',routesPct);
+  setPct('centres-pct','centres-bar',centresPct);
+
+  // Achievements
+  const achs = [
+    {id:'ach1',icon:'🌍',unlock:centresCount>=1},
+    {id:'ach2',icon:'🛣️',unlock:viewed>=10},
+    {id:'ach3',icon:'🧭',unlock:navigated>=1},
+    {id:'ach4',icon:'⭐',unlock:overall>=50},
+    {id:'ach5',icon:'👑',unlock:adiUnlocked},
+    {id:'ach6',icon:'🏆',unlock:centresCount>=20}
+  ];
+  achs.forEach(a => { if (el(a.id)) el(a.id).textContent = a.unlock ? a.icon : '🔒'; });
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function updateSettingsUI() {
+  const v = localStorage.getItem('dtrm_voice') !== '0';
+  const g = localStorage.getItem('dtrm_gps') !== '0';
+  const tv = document.getElementById('toggle-voice');
+  const tg = document.getElementById('toggle-gps');
+  if (tv) { tv.classList.toggle('on', v); }
+  if (tg) { tg.classList.toggle('on', g); }
+  const dt = localStorage.getItem('dtrm_test_date');
+  const dtEl = document.getElementById('test-date-val');
+  if (dtEl) dtEl.textContent = dt ? new Date(dt).toLocaleDateString('en-GB') : 'Not set';
+}
+
+function toggleSetting(s) {
+  const key = 'dtrm_' + s;
+  const current = localStorage.getItem(key) !== '0';
+  localStorage.setItem(key, current ? '0' : '1');
+  updateSettingsUI();
+  showToast(s.charAt(0).toUpperCase()+s.slice(1)+' '+(current?'disabled':'enabled'));
+}
+
+function showTestDateModal() { document.getElementById('testdate-modal').classList.add('open'); }
+function saveTestDate() {
+  const v = document.getElementById('test-date-input').value;
+  if (v) {
+    localStorage.setItem('dtrm_test_date', v);
+    updateSettingsUI();
+    showToast('Test date saved!');
+  }
+  closeModal('testdate-modal');
+}
+function clearData() {
+  if (confirm('Clear all progress data?')) {
+    ['dtrm_analytics','dtrm_adi','dtrm_test_date'].forEach(k=>localStorage.removeItem(k));
+    adiUnlocked = false;
+    updateAnalytics();
+    showToast('Progress cleared');
+  }
+}
+
+// ============================================================
+// MODAL / TOAST
+// ============================================================
+function closeModal(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.remove('open');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal')) {
+    e.target.classList.remove('open');
+  }
+});
+</script>
+<script src="/backend-bridge.js"></script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));}</script>
+</body>
+</html>
