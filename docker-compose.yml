@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: driving_test_routes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      APP_URL: http://localhost:3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/driving_test_routes?schema=public
+      SESSION_COOKIE_NAME: dtrm_sid
+      CSRF_COOKIE_NAME: dtrm_csrf
+      SESSION_TTL_DAYS: 30
+      SESSION_RENEW_HOURS: 12
+      BCRYPT_ROUNDS: 12
+      ALLOW_GUEST_MODE: false
+      ENFORCE_DEVICE_LOCK: true
+      MAX_DEVICES_PER_USER: 1
+      MAX_ENTERPRISE_DEVICES: 10
+      GOOGLE_AUTH_ENABLED: false
+      SUPPORT_EMAIL: support@example.com
+    ports:
+      - "3000:3000"
+    command: sh -c "npx prisma db push && node src/server.js"
+
+volumes:
+  postgres_data:
