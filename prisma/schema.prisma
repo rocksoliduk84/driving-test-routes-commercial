@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum PlanTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionState {
+  INACTIVE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+enum DeviceTrust {
+  PENDING
+  APPROVED
+  REVOKED
+}
+
+model User {
+  id              String              @id @default(cuid())
+  email           String              @unique
+  passwordHash    String?
+  name            String?
+  picture         String?
+  role            UserRole            @default(USER)
+  status          UserStatus          @default(ACTIVE)
+  emailVerifiedAt DateTime?
+  googleSub       String?             @unique
+  stripeCustomerId String?            @unique
+  activePlan      PlanTier            @default(FREE)
+  planStatus      SubscriptionState   @default(INACTIVE)
+  activeDeviceId  String?
+  mfaEnabled      Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  devices         Device[]
+  sessions        Session[]
+  subscriptions   Subscription[]
+  progresses      UserProgress[]
+  authEvents      AuthEvent[]
+}
+
+model Device {
+  id              String       @id @default(cuid())
+  userId          String
+  fingerprintHash String
+  label           String?
+  userAgent       String?
+  lastIpHash      String?
+  trustLevel      DeviceTrust  @default(PENDING)
+  approvedAt      DateTime?
+  revokedAt       DateTime?
+  lastSeenAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions        Session[]
+
+  @@unique([userId, fingerprintHash])
+  @@index([userId, trustLevel])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  userId       String
+  deviceId     String?
+  tokenHash    String    @unique
+  csrfSecret   String
+  ipHash       String?
+  userAgent    String?
+  expiresAt    DateTime
+  lastSeenAt   DateTime  @default(now())
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device       Device?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, expiresAt])
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  userId                 String
+  provider               String             @default("stripe")
+  providerCustomerId     String?
+  providerSubscriptionId String?            @unique
+  providerPriceId        String?
+  planTier               PlanTier           @default(PRO)
+  status                 SubscriptionState  @default(INACTIVE)
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean            @default(false)
+  metadata               Json?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  user                   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+model UserProgress {
+  id                 String    @id @default(cuid())
+  userId             String
+  centreId           String
+  routeNum           Int
+  isAdi              Boolean   @default(false)
+  phase              Int       @default(1)
+  stepIdx            Int       @default(0)
+  routeName          String
+  centreName         String
+  modalOpen          Boolean   @default(false)
+  reason             String?
+  lastKnownLat       Float?
+  lastKnownLng       Float?
+  payload            Json?
+  updatedAt          DateTime  @updatedAt
+  createdAt          DateTime  @default(now())
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, centreId, routeNum, isAdi])
+  @@index([userId, updatedAt])
+}
+
+model AuthEvent {
+  id         String    @id @default(cuid())
+  userId      String?
+  email       String?
+  eventType   String
+  outcome     String
+  ipHash      String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email, createdAt])
+  @@index([userId, createdAt])
+}
