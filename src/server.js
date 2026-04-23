@@ -541,7 +541,7 @@ app.post('/api/billing/portal', requireAuth, requireCsrf, async (req, res) => {
 });
 
 app.use(express.static(publicDir, { extensions: ['html'] }));
-app.get('*', (_req, res) => {
+app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
