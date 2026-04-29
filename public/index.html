@@ -2196,17 +2196,22 @@ function viewCentreRoutesById(centreId) {
 function renderCentresList(centres) {
   const list = document.getElementById('centres-list');
   if (!list) return;
+
   const regionClass = {
-    'England':'region-england','Scotland':'region-scotland','Wales':'region-wales',
-    'Northern Ireland':'region-ni','Ireland':'region-ireland'
+    'England': 'region-england',
+    'Scotland': 'region-scotland',
+    'Wales': 'region-wales',
+    'Northern Ireland': 'region-ni',
+    'Ireland': 'region-ireland'
   };
+
   list.innerHTML = centres.map(c => `
     <div class="centre-card" onclick="selectCentre(${c.id})">
-      <span class="centre-region ${regionClass[c.region]||'region-england'}">${c.region}</span>
+      <span class="centre-region ${regionClass[c.region] || 'region-england'}">${c.region}</span>
       <div class="centre-name">${c.name}</div>
       <div class="centre-meta">
-        <span>📍 ${c.town}</span>
-        <span>🛣️ 15 Standard + ${c.id===72?5:7} ADI</span>
+        <span>📍 ${[c.address1, c.address2, c.city || c.town].filter(Boolean).join(', ')}</span>
+        <span>🏷️ ${c.postcode || 'Postcode unavailable'}</span>
       </div>
     </div>
   `).join('');
