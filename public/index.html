@@ -2231,10 +2231,22 @@ function filterRegion(region, el) {
 
 function applyFilters() {
   let filtered = testCentres;
-  if (currentFilter !== 'all') filtered = filtered.filter(c=>c.region===currentFilter);
-  if (currentSearch) filtered = filtered.filter(c=>
-    c.name.toLowerCase().includes(currentSearch)||c.town.toLowerCase().includes(currentSearch)
-  );
+
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter(c => c.region === currentFilter);
+  }
+
+  if (currentSearch) {
+    filtered = filtered.filter(c =>
+      c.name.toLowerCase().includes(currentSearch) ||
+      c.town.toLowerCase().includes(currentSearch) ||
+      (c.address1 || '').toLowerCase().includes(currentSearch) ||
+      (c.address2 || '').toLowerCase().includes(currentSearch) ||
+      (c.city || '').toLowerCase().includes(currentSearch) ||
+      (c.postcode || '').toLowerCase().includes(currentSearch)
+    );
+  }
+
   renderCentresList(filtered);
 }
 
