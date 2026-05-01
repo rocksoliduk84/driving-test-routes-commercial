@@ -155,7 +155,7 @@ const resumeKey = 'dtrm_nav_resume_v12';
   async function syncProgressFromServer(progress) {
     const resolved = progress || (await api('/api/progress/current')).progress;
     if (!resolved) return;
-    localStorage.setItem(NAV_RESUME_KEY, JSON.stringify({
+    localStorage.setItem(resumeKey, JSON.stringify({
       centreId: Number(resolved.centreId),
       routeNum: resolved.routeNum,
       isAdi: resolved.isAdi,
