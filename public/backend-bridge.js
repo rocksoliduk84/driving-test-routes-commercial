@@ -14,7 +14,7 @@
   const routeBundleCache = new Map();
   let runtimeConfig = null;
   let progressSyncTimer = null;
-
+const resumeKey = 'dtrm_nav_resume_v12';
   function getCookie(name) {
     const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.$?*|{}()[\]\\/+^]/g, '\\$&') + '=([^;]*)'));
     return match ? decodeURIComponent(match[1]) : '';
