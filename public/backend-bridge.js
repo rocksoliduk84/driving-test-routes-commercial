@@ -339,7 +339,7 @@ const resumeKey = 'dtrm_nav_resume_v12';
     clearTimeout(progressSyncTimer);
     progressSyncTimer = setTimeout(async () => {
       try {
-        const raw = localStorage.getItem(NAV_RESUME_KEY);
+        const raw = localStorage.getItem(resumeKey);
         if (!raw) return;
         await api('/api/progress/current', { method: 'POST', body: raw });
       } catch (error) {
