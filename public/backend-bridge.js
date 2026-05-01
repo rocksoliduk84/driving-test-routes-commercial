@@ -1,5 +1,8 @@
 (() => {
-  const originalLaunchApp = window.launchApp;
+  const originalLaunchApp = (...args) =>
+  (typeof window.launchApp === 'function'
+    ? window.launchApp(...args)
+    : (typeof launchApp === 'function' ? launchApp(...args) : undefined));
   const originalOpenRoute = window.openRoute;
   const originalOpenRealNavigation = window.openRealNavigation;
   const originalUpdateSettingsUI = window.updateSettingsUI;
