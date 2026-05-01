@@ -315,7 +315,7 @@ const resumeKey = 'dtrm_nav_resume_v12';
     } catch (error) {
       console.warn('Logout request failed', error);
     }
-    ['dtrm_user', 'dtrm_adi', NAV_RESUME_KEY].forEach((key) => localStorage.removeItem(key));
+    ['dtrm_user', 'dtrm_adi', resumeKey].forEach((key) => localStorage.removeItem(key));
     routeBundleCache.clear();
     window.location.reload();
   };
