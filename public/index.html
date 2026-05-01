@@ -877,8 +877,19 @@ function signOut() {
   document.getElementById('auth-screen').classList.remove('hidden');
   showToast('Signed out successfully');
 }
-
-function launchApp(user) {
+async function loadCentresFromApi() {
+  try {
+    const res = await fetch('/api/routes/centres');
+    if (!res.ok) throw new Error('Failed to load centres');
+    const data = await res.json();
+    if (Array.isArray(data.centres) && data.centres.length) {
+      testCentres = data.centres;
+    }
+  } catch (err) {
+    console.error('Could not load centres from API:', err);
+  }
+}
+async function launchApp(user) {
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('locked-screen').classList.remove('show');
   document.getElementById('main-header').style.display = '';
@@ -896,14 +907,13 @@ function launchApp(user) {
   document.getElementById('settings-device-id').textContent = DEVICE_ID;
 
   // Load app data
-  renderCentresList(testCentres);
-  updateAnalytics();
-  updateSettingsUI();
-  syncAppMetaCounts();
-  refreshResumeNavigationUI();
-
-  // Load map immediately
-  loadLeaflet();
+await loadCentresFromApi();
+renderCentresList(testCentres);
+updateAnalytics();
+updateSettingsUI();
+syncAppMetaCounts();
+refreshResumeNavigationUI();
+loadLeaflet();
 
   setTimeout(() => {
     if (getSavedNavigationState()) showResumeNavigationModal();
@@ -1060,7 +1070,7 @@ const routeData = {
   adi: (centre) => Array.from({length:7}, (_, i) => `ADI Route ${i+1}`)
 };
 
-const testCentres = [
+let testCentres = [
   // ===== ENGLAND - LONDON (comprehensive) =====
   {id:1,name:"Barking",town:"Barking",region:"England",lat:51.5397,lng:0.0820},
   {id:2,name:"Barnet",town:"Barnet",region:"England",lat:51.6500,lng:-0.1980},
