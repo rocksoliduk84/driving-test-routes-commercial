@@ -749,6 +749,7 @@ function getDeviceId() {
 }
 
 const DEVICE_ID = getDeviceId();
+window.DEVICE_ID = DEVICE_ID;
 
 // ============================================================
 // DEVICE LOCK STORAGE (localStorage-based)
@@ -789,7 +790,7 @@ let mapInitialized = false;
 let centreMarkers = {};
 
 // Show device ID in auth screen
-document.getElementById('auth-device-id').textContent = DEVICE_ID;
+document.getElementById('auth-device-id').textContent = window.DEVICE_ID || DEVICE_ID;
 
 // ============================================================
 // GOOGLE SIGN-IN INIT
