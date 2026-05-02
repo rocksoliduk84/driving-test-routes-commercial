@@ -1601,7 +1601,7 @@ navCurrentWaypoints = getRouteWaypoints(centre, safeRouteNum, isAdi);
   const modal = document.getElementById('nav-modal');
   if (modal) {
     modal.classList.add('open');
-    document.getElementById('nav-route-title').textContent = `${isAdi ? 'ADI Route' : 'Standard Route'} ${routeNum} · ${centre.name}`;
+    document.getElementById('nav-route-title').textContent = `${isAdi ? 'ADI Route' : 'Standard Route'} ${safeRouteNum} · ${centre.name}`;
     document.getElementById('nav-phase-label').textContent = navPhase === 2 ? '🛣️ Phase 2: Driving the Test Route' : '🧭 Choose how to start this route';
     document.getElementById('nav-instruction').textContent = resumeState ? 'Restoring your saved navigation...' : 'Getting your location...';
     document.getElementById('nav-step-counter').textContent = `Step ${Math.min(navCurrentStepIdx + 1, navCurrentSteps.length)} / ${navCurrentSteps.length}`;
