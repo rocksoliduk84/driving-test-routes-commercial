@@ -1584,7 +1584,7 @@ function getRouteSteps(centre, routeNum, isAdi) {
 function openRealNavigation(centreId, routeNum, isAdi, options = {}) {
   const centre = testCentres.find(c => c.id === centreId);
   if (!centre) return;
-
+const safeRouteNum = Math.max(1, parseInt(routeNum, 10) || 1);
   const resumeState = options.resumeState || null;
   const resumeMode = options.resumeMode || 'restart';
 
