@@ -1589,9 +1589,9 @@ const safeRouteNum = Math.max(1, parseInt(routeNum, 10) || 1);
   const resumeMode = options.resumeMode || 'restart';
 
   navCurrentCentre = centre;
-  navCurrentRoute = { routeNum, isAdi };
-  navCurrentSteps = getRouteSteps(centre, routeNum, isAdi);
-  navCurrentWaypoints = getRouteWaypoints(centre, routeNum, isAdi);
+  navCurrentRoute = { routeNum: safeRouteNum, isAdi };
+navCurrentSteps = getRouteSteps(centre, safeRouteNum, isAdi);
+navCurrentWaypoints = getRouteWaypoints(centre, safeRouteNum, isAdi);
   navCurrentStepIdx = Math.max(0, Math.min(resumeState && resumeState.phase === 2 ? (resumeState.stepIdx || 0) : 0, navCurrentSteps.length - 1));
   navPhase = (resumeState && resumeState.phase === 2 && resumeMode !== 'restart') ? 2 : 1;
   navStarted = navPhase === 2;
