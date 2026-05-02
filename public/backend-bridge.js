@@ -58,7 +58,7 @@ const resumeKey = 'dtrm_nav_resume_v12';
         <input id="auth-password-input" type="password" placeholder="Password" required style="padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#091426;color:#fff;">
         <button id="server-auth-submit" type="submit" class="btn btn-gold btn-full">Sign in securely</button>
       </form>
-      <div style="margin-top:10px;color:#94a3b8;font-size:13px;line-height:1.5;">Accounts, subscriptions, route access, and progress are now backed by the server. Device enforcement uses your device fingerprint <strong>${typeof DEVICE_ID !== 'undefined' ? DEVICE_ID : 'device'}</strong>.</div>
+      <div style="margin-top:10px;color:#94a3b8;font-size:13px;line-height:1.5;">Accounts, subscriptions, route access, and progress are now backed by the server. Device enforcement uses your device fingerprint <strong>${window.DEVICE_ID || 'device'}</strong>.</div>
     `;
     const googleBtn = document.getElementById('google-signin-btn');
     if (googleBtn && googleBtn.parentNode) {
@@ -86,7 +86,7 @@ const resumeKey = 'dtrm_nav_resume_v12';
       const submit = document.getElementById('server-auth-submit');
       submit.disabled = true;
       try {
-        const payload = { email, password, deviceFingerprint: typeof DEVICE_ID !== 'undefined' ? DEVICE_ID : 'browser-device' };
+        const payload = { email, password, deviceFingerprint: window.DEVICE_ID || 'browser-device' };
         if (mode === 'register' && name) payload.name = name;
         const data = await api(mode === 'register' ? '/api/auth/register' : '/api/auth/login', {
           method: 'POST',
@@ -292,7 +292,7 @@ const resumeKey = 'dtrm_nav_resume_v12';
     try {
       const data = await api('/api/billing/checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan: selectedPlanKey(), deviceFingerprint: typeof DEVICE_ID !== 'undefined' ? DEVICE_ID : 'browser-device' })
+        body: JSON.stringify({ plan: selectedPlanKey(), deviceFingerprint: window.DEVICE_ID || 'browser-device' })
       });
       if (data.url) window.location.href = data.url;
     } catch (error) {
