@@ -214,7 +214,7 @@ const resumeKey = 'dtrm_nav_resume_v12';
             method: 'POST',
             body: JSON.stringify({
               credential: response.credential,
-              deviceFingerprint: typeof DEVICE_ID !== 'undefined' ? DEVICE_ID : 'browser-device'
+              deviceFingerprint: window.DEVICE_ID || 'browser-device'
             })
           });
           await bootAuthenticatedApp(data);
