@@ -2286,6 +2286,33 @@ function quickNav(centreId, routeName, isAdi) {
 function filterMapCentres(q) {
   if (!mapInstance) return;
   const term = (q || '').trim().toLowerCase();
+
+  if (!term) {
+    mapInstance.setView([54.5, -4.0], 6);
+    return;
+  }
+
+  const matches = testCentres.filter(c =>
+    c.name.toLowerCase().includes(term) ||
+    c.town.toLowerCase().includes(term) ||
+    (c.address1 || '').toLowerCase().includes(term) ||
+    (c.address2 || '').toLowerCase().includes(term) ||
+    (c.city || '').toLowerCase().includes(term) ||
+    (c.postcode || '').toLowerCase().includes(term)
+  );
+
+  if (!matches.length) return;
+
+  const centre = matches[0];
+  const marker = centreMarkers[centre.id];
+  mapInstance.setView([centre.lat, centre.lng], 13, { animate: true });
+
+  if (marker) {
+    setTimeout(() => marker.openPopup(), 250);
+  }
+}
+  if (!mapInstance) return;
+  const term = (q || '').trim().toLowerCase();
   if (!term) {
     mapInstance.setView([54.5, -4.0], 6);
     return;
