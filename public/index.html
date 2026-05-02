@@ -1614,7 +1614,7 @@ navCurrentWaypoints = getRouteWaypoints(centre, safeRouteNum, isAdi);
   refreshGoogleButtonState();
   hideNavStartChoiceCard();
   saveNavigationState(resumeState ? 'resume-open' : 'open');
-  setTimeout(() => initNavMap(centre, routeNum, isAdi, options), 200);
+  setTimeout(() => initNavMap(centre, safeRouteNum, isAdi, options), 200);
 }
 
 function initNavMap(centre, routeNum, isAdi, options = {}) {
