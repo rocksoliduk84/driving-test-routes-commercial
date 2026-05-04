@@ -689,7 +689,8 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
       <div id="nav-instruction">Getting your location...</div>
       <div id="nav-step-counter">Step 0 / 0</div>
       <div id="nav-actions-row">
-        <button id="nav-google-btn" class="nav-btn nav-btn-google" onclick="openInGoogleMaps()">📲 Open in Google Maps</button>
+        <button id="nav-google-remaining-btn" class="nav-btn nav-btn-google" onclick="openInGoogleMaps('remaining-route')">📲 Google Maps from current location</button>
+<button id="nav-google-centre-btn" class="nav-btn nav-btn-google" onclick="openInGoogleMaps('centre-first')">📍 Google Maps via test centre first</button>
         <button id="nav-rejoin-btn" class="nav-btn nav-btn-secondary" onclick="rejoinCurrentRoute()">↩ Rejoin Route</button>
       </div>
       <div id="offroute-card">
@@ -698,7 +699,8 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <div class="offroute-actions">
           <button class="nav-btn nav-btn-next" onclick="continueFromCurrentLocation()">Continue from here</button>
           <button class="nav-btn nav-btn-secondary" onclick="rejoinCurrentRoute()">Guide me back</button>
-          <button class="nav-btn nav-btn-google" onclick="openInGoogleMaps()">Open Google Maps</button>
+          <button class="nav-btn nav-btn-google" onclick="openInGoogleMaps('remaining-route')">📲 Open Google Maps from current location</button>
+<button class="nav-btn nav-btn-google" onclick="openInGoogleMaps('centre-first')">📍 Open Google Maps via test centre first</button>
         </div>
       </div>
       <button id="nav-begin-btn" class="nav-btn nav-btn-begin" onclick="beginTestRoute()">
