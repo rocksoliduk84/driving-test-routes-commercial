@@ -1343,6 +1343,22 @@ function refreshGoogleButtonState() {
 function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
 
+  const computedDistanceToCentre =
+    typeof navCurrentDistanceToCentreMeters === 'number'
+      ? navCurrentDistanceToCentreMeters
+      : (navLastKnownPosition
+          ? distanceBetweenPointsMeters(
+              navLastKnownPosition.lat,
+              navLastKnownPosition.lng,
+              navCurrentCentre.lat,
+              navCurrentCentre.lng
+            )
+          : null);
+
+  const isWithinRadius =
+    computedDistanceToCentre !== null &&
+    computedDistanceToCentre <= NAV_START_RADIUS_METERS;
+
   let origin = navLastKnownPosition || navCurrentWaypoints[0] || navCurrentCentre;
   let destination = navCurrentCentre;
   let waypoints = [];
@@ -1352,19 +1368,28 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
     destination = navCurrentCentre;
     waypoints = [];
   } else if (navCurrentWaypoints.length) {
-    const phase2 = navPhase === 2;
     let remaining = [];
 
-    if (!phase2) {
-      remaining = navCurrentWaypoints.slice(1);
-    } else {
-      const nearest = navLastKnownPosition
-        ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
-        : null;
+    if (isWithinRadius && navLastKnownPosition) {
+      const nearest = getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
       const startIdx = nearest
         ? Math.min(nearest.index + 1, Math.max(1, navCurrentWaypoints.length - 1))
         : 1;
       remaining = navCurrentWaypoints.slice(startIdx);
+    } else {
+      const phase2 = navPhase === 2;
+
+      if (!phase2) {
+        remaining = navCurrentWaypoints.slice(1);
+      } else {
+        const nearest = navLastKnownPosition
+          ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
+          : null;
+        const startIdx = nearest
+          ? Math.min(nearest.index + 1, Math.max(1, navCurrentWaypoints.length - 1))
+          : 1;
+        remaining = navCurrentWaypoints.slice(startIdx);
+      }
     }
 
     destination = remaining.length ? remaining[remaining.length - 1] : navCurrentCentre;
@@ -1386,6 +1411,7 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   }
 
   return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
 }
   function openInGoogleMaps(mode = 'remaining-route') {
   const url = buildGoogleMapsNavigationUrl(mode);
