@@ -1386,11 +1386,7 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
 }
 }
 
-function openInGoogleMaps() {
-  const url = buildGoogleMapsNavigationUrl();
-  if (!url) {
-    showToast('Navigation destination not ready yet');
-    function openInGoogleMaps(mode = 'remaining-route') {
+  function openInGoogleMaps(mode = 'remaining-route') {
   const url = buildGoogleMapsNavigationUrl(mode);
   if (!url) {
     showToast('Navigation destination not ready yet');
