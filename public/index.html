@@ -1468,15 +1468,20 @@ function chooseNavStartMode(mode) {
     renderRouteToCentrePreview(navCurrentCentre);
     return;
   }
-  const stepIdx = navLastKnownPosition ? estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng) : 0;
-  const directStartState = {
-    phase: 2,
-    stepIdx,
-    lastKnownLat: navLastKnownPosition ? navLastKnownPosition.lat : null,
-    lastKnownLng: navLastKnownPosition ? navLastKnownPosition.lng : null
-  };
-  const startMode = navCurrentDistanceToCentreMeters !== null && navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS ? 'radius-start' : 'continue';
-  startPhase2Navigation(directStartState, startMode);
+  const isWithinRadius = navCurrentDistanceToCentreMeters !== null && navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
+const stepIdx = isWithinRadius
+  ? 0
+  : (navLastKnownPosition ? estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng) : 0);
+
+const directStartState = {
+  phase: 2,
+  stepIdx,
+  lastKnownLat: navLastKnownPosition ? navLastKnownPosition.lat : null,
+  lastKnownLng: navLastKnownPosition ? navLastKnownPosition.lng : null
+};
+
+const startMode = isWithinRadius ? 'radius-start' : 'continue';
+startPhase2Navigation(directStartState, startMode);
 }
 
 function renderRouteToCentrePreview(centre) {
