@@ -2028,11 +2028,6 @@ const directState = {
 
 const mode = isWithinRadius ? 'radius-start' : 'continue';
 startPhase2Navigation(directState, mode);
-      lastKnownLat: navLastKnownPosition.lat,
-      lastKnownLng: navLastKnownPosition.lng
-    };
-    const mode = navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS ? 'radius-start' : 'continue';
-    startPhase2Navigation(directState, mode);
   } else {
     startPhase2Navigation();
   }
