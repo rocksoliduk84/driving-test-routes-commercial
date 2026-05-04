@@ -1384,8 +1384,6 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
 
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
-}
-
   function openInGoogleMaps(mode = 'remaining-route') {
   const url = buildGoogleMapsNavigationUrl(mode);
   if (!url) {
