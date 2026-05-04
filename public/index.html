@@ -1340,17 +1340,39 @@ function refreshGoogleButtonState() {
 
 function buildGoogleMapsNavigationUrl() {
   if (!navCurrentCentre) return '';
-  const phase2 = navPhase === 2 && navCurrentWaypoints.length;
+
+  const closeToCentre =
+    typeof navCurrentDistanceToCentreMeters === 'number' &&
+    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
+
+  const useFullRouteFromStart =
+    navCurrentWaypoints.length && navPhase === 1 && closeToCentre;
+
+  const phase2 = (navPhase === 2 && navCurrentWaypoints.length) || useFullRouteFromStart;
+
   const startPoint = navLastKnownPosition || navCurrentWaypoints[0] || navCurrentCentre;
   let destination = navCurrentCentre;
   let waypoints = [];
 
   if (phase2) {
-    const nearest = navLastKnownPosition ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng) : null;
-    const startIdx = nearest ? Math.min(nearest.index + 1, Math.max(0, navCurrentWaypoints.length - 1)) : 1;
-    const remaining = navCurrentWaypoints.slice(startIdx);
+    let remaining = [];
+
+    if (useFullRouteFromStart) {
+      remaining = navCurrentWaypoints.slice(1);
+    } else {
+      const nearest = navLastKnownPosition
+        ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
+        : null;
+      const startIdx = nearest
+        ? Math.min(nearest.index + 1, Math.max(1, navCurrentWaypoints.length - 1))
+        : 1;
+      remaining = navCurrentWaypoints.slice(startIdx);
+    }
+
     destination = remaining.length ? remaining[remaining.length - 1] : navCurrentCentre;
-    waypoints = remaining.slice(0, Math.max(0, remaining.length - 1)).slice(0, NAV_GOOGLE_MAX_WAYPOINTS);
+    waypoints = remaining
+      .slice(0, Math.max(0, remaining.length - 1))
+      .slice(0, NAV_GOOGLE_MAX_WAYPOINTS);
   }
 
   const params = new URLSearchParams({
