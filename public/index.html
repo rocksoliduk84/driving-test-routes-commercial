@@ -1390,14 +1390,14 @@ function openInGoogleMaps() {
   const url = buildGoogleMapsNavigationUrl();
   if (!url) {
     showToast('Navigation destination not ready yet');
+    function openInGoogleMaps(mode = 'remaining-route') {
+  const url = buildGoogleMapsNavigationUrl(mode);
+  if (!url) {
+    showToast('Navigation destination not ready yet');
     return;
   }
   window.open(url, '_blank', 'noopener');
 }
-
-function getNearestRoutePoint(lat, lng) {
-  const points = navRouteGeometry.length ? navRouteGeometry : navCurrentWaypoints;
-  if (!points.length) return null;
   let bestIndex = 0;
   let bestDist = Infinity;
   points.forEach((point, index) => {
