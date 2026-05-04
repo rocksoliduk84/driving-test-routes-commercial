@@ -1992,15 +1992,20 @@ function stopNavigation() {
   navCurrentDistanceToCentreMeters = null;
   navRouteGeometry = [];
   navRouteInstructionPoints = [];
-}
+const isWithinRadius = navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
+const stepIdx = isWithinRadius
+  ? 0
+  : estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng);
 
-function beginTestRoute() {
-  if (navLastKnownPosition && navCurrentCentre) {
-    navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(navLastKnownPosition.lat, navLastKnownPosition.lng, navCurrentCentre.lat, navCurrentCentre.lng);
-    const stepIdx = estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng);
-    const directState = {
-      phase: 2,
-      stepIdx,
+const directState = {
+  phase: 2,
+  stepIdx,
+  lastKnownLat: navLastKnownPosition.lat,
+  lastKnownLng: navLastKnownPosition.lng
+};
+
+const mode = isWithinRadius ? 'radius-start' : 'continue';
+startPhase2Navigation(directState, mode);
       lastKnownLat: navLastKnownPosition.lat,
       lastKnownLng: navLastKnownPosition.lng
     };
