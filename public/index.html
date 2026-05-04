@@ -1392,6 +1392,10 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   }
   window.open(url, '_blank', 'noopener');
 }
+  function getNearestRoutePoint(lat, lng) {
+  const points = navCurrentWaypoints || [];
+  if (!points.length) return null;
+
   let bestIndex = 0;
   let bestDist = Infinity;
   points.forEach((point, index) => {
