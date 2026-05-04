@@ -1338,26 +1338,21 @@ function refreshGoogleButtonState() {
   btn.style.opacity = navCurrentCentre ? '1' : '0.5';
 }
 
-function buildGoogleMapsNavigationUrl() {
+function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
-
-  const closeToCentre =
-    typeof navCurrentDistanceToCentreMeters === 'number' &&
-    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
-
-  const useFullRouteFromStart =
-    navCurrentWaypoints.length && navPhase === 1 && closeToCentre;
-
-  const phase2 = (navPhase === 2 && navCurrentWaypoints.length) || useFullRouteFromStart;
 
   const startPoint = navLastKnownPosition || navCurrentWaypoints[0] || navCurrentCentre;
   let destination = navCurrentCentre;
   let waypoints = [];
 
-  if (phase2) {
+  if (mode === 'centre-first') {
+    destination = navCurrentCentre;
+    waypoints = [];
+  } else if (navCurrentWaypoints.length) {
+    const phase2 = navPhase === 2;
     let remaining = [];
 
-    if (useFullRouteFromStart) {
+    if (!phase2) {
       remaining = navCurrentWaypoints.slice(1);
     } else {
       const nearest = navLastKnownPosition
@@ -1388,6 +1383,7 @@ function buildGoogleMapsNavigationUrl() {
   }
 
   return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
 }
 
 function openInGoogleMaps() {
