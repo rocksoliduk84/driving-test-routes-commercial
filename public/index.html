@@ -1343,11 +1343,12 @@ function refreshGoogleButtonState() {
 function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
 
-  const startPoint = navLastKnownPosition || navCurrentWaypoints[0] || navCurrentCentre;
+  let origin = navLastKnownPosition || navCurrentWaypoints[0] || navCurrentCentre;
   let destination = navCurrentCentre;
   let waypoints = [];
 
   if (mode === 'centre-first') {
+    origin = navLastKnownPosition || navCurrentCentre;
     destination = navCurrentCentre;
     waypoints = [];
   } else if (navCurrentWaypoints.length) {
@@ -1374,7 +1375,7 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
 
   const params = new URLSearchParams({
     api: '1',
-    origin: `${startPoint.lat},${startPoint.lng}`,
+    origin: `${origin.lat},${origin.lng}`,
     destination: `${destination.lat},${destination.lng}`,
     travelmode: 'driving',
     dir_action: 'navigate'
