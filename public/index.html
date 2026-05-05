@@ -1457,7 +1457,36 @@ function showOffRouteCard(distanceMeters) {
   meta.innerHTML = `You are about <strong>${formatDistanceMetersShort(distanceMeters)}</strong> away from the planned route line. Keep our route, rejoin it, or hand off to Google Maps.`;
   card.style.display = 'block';
 }
+function enterAwaitingRouteJoin(distanceMeters = null) {
+  navAwaitingRouteJoin = true;
+  document.getElementById('nav-phase-label').textContent = '🛣️ Phase 2: Drive to the highlighted route';
+  document.getElementById('nav-instruction').textContent =
+    typeof distanceMeters === 'number'
+      ? `Drive to the highlighted route line (${formatDistanceMetersShort(distanceMeters)} away). Turn-by-turn guidance will begin automatically when you rejoin it.`
+      : 'Drive to the highlighted route line. Turn-by-turn guidance will begin automatically when you rejoin it.';
 
+  const list = document.getElementById('nav-steps-list');
+  if (list) {
+    list.innerHTML = `
+      <div class="nav-step nav-step-active">1. Follow the highlighted route line back to the planned route.</div>
+      <div class="nav-step">2. Your live location stays visible on the map while you approach it.</div>
+      <div class="nav-step">3. Turn-by-turn guidance will begin automatically once you are back on the route.</div>
+    `;
+  }
+
+  const counter = document.getElementById('nav-step-counter');
+  if (counter) counter.textContent = 'Waiting to rejoin route';
+  if (typeof distanceMeters === 'number') showOffRouteCard(distanceMeters);
+}
+
+function activateRouteGuidanceFromCurrentLocation(lat, lng, shouldSpeak = true) {
+  navAwaitingRouteJoin = false;
+  hideOffRouteCard();
+  clearRejoinRouteOverlay();
+  navCurrentStepIdx = estimateStepIndexFromLocation(lat, lng);
+  renderNavSteps();
+  if (shouldSpeak) speakCurrentStep();
+}
 function ensureNavStartChoiceCard() {
   let card = document.getElementById('nav-start-choice');
   if (card) return card;
