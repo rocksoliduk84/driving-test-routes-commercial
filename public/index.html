@@ -1577,35 +1577,14 @@ function showNavStartChoiceCard(distanceMeters) {
 function chooseNavStartMode(mode) {
   hideNavStartChoiceCard();
   if (!navCurrentCentre) return;
+
   if (mode === 'centre-first') {
     renderRouteToCentrePreview(navCurrentCentre);
     return;
   }
-    const isWithinRadius =
-    navCurrentDistanceToCentreMeters !== null &&
-    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
 
-  const isAtCentre =
-    navCurrentDistanceToCentreMeters !== null &&
-    navCurrentDistanceToCentreMeters <= NAV_REJOIN_THRESHOLD_METERS;
-
-  const stepIdx = isAtCentre
-    ? 0
-    : (navLastKnownPosition
-        ? estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng)
-        : 0);
-
-  const directStartState = {
-    phase: 2,
-    stepIdx,
-    lastKnownLat: navLastKnownPosition ? navLastKnownPosition.lat : null,
-    lastKnownLng: navLastKnownPosition ? navLastKnownPosition.lng : null
-  };
-
-  const startMode = isWithinRadius ? 'radius-start' : 'continue';
-  startPhase2Navigation(directStartState, startMode);
+  openInGoogleMaps('remaining-route');
 }
-
 function renderRouteToCentrePreview(centre) {
   if (!navLastKnownPosition) {
     startPhase2Navigation();
