@@ -2074,7 +2074,6 @@ function startGPSTracking(resumeMode = 'restart') {
             showToast('You are back on the planned route');
           }
         }
-      }
 
       if (navMap) navMap.panTo([lat, lng], {animate: true});
       saveNavigationState('gps-update');
