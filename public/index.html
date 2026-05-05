@@ -1422,19 +1422,34 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   window.open(url, '_blank', 'noopener');
 }
   function getNearestRoutePoint(lat, lng) {
-  const points = navCurrentWaypoints || [];
-  if (!points.length) return null;
+  const routePoints = navRouteInstructionPoints.length
+    ? navRouteInstructionPoints
+    : (navRouteGeometry.length ? navRouteGeometry : navCurrentWaypoints);
+
+  if (!routePoints.length) return null;
 
   let bestIndex = 0;
   let bestDist = Infinity;
-  points.forEach((point, index) => {
+
+  routePoints.forEach((point, index) => {
     const dist = distanceBetweenPointsMeters(lat, lng, point.lat, point.lng);
     if (dist < bestDist) {
       bestDist = dist;
       bestIndex = index;
     }
   });
-  return { index: bestIndex, distanceMeters: bestDist, point: points[bestIndex] };
+
+  const point = routePoints[bestIndex];
+  const waypointIndex = navCurrentWaypoints.length > 1
+    ? Math.round((bestIndex / Math.max(1, routePoints.length - 1)) * (navCurrentWaypoints.length - 1))
+    : bestIndex;
+
+  return {
+    index: Math.max(0, Math.min(waypointIndex, Math.max(0, navCurrentWaypoints.length - 1))),
+    geometryIndex: bestIndex,
+    distanceMeters: bestDist,
+    point
+  };
 }
 
 function clearRejoinRouteOverlay() {
