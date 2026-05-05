@@ -2110,8 +2110,10 @@ function beginTestRoute() {
   if (navLastKnownPosition && navCurrentCentre) {
     navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(navLastKnownPosition.lat, navLastKnownPosition.lng, navCurrentCentre.lat, navCurrentCentre.lng);
 
-    const isWithinRadius = navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
-    const stepIdx = isWithinRadius
+        const isWithinRadius = navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
+    const isAtCentre = navCurrentDistanceToCentreMeters <= NAV_REJOIN_THRESHOLD_METERS;
+
+    const stepIdx = isAtCentre
       ? 0
       : estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng);
 
