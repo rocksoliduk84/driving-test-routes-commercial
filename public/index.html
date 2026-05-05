@@ -2043,8 +2043,7 @@ function startGPSTracking(resumeMode = 'restart') {
           if (nearest && nearest.distanceMeters <= NAV_REJOIN_THRESHOLD_METERS) {
             activateRouteGuidanceFromCurrentLocation(lat, lng, true);
             showToast('Back on the route — turn-by-turn guidance started');
-          } else if (nearest) {
-            enterAwaitingRouteJoin(nearest.distanceMeters);
+          } else if (nearest) {            enterAwaitingRouteJoin(nearest.distanceMeters);
           }
         } else {
           const matchedIdx = estimateStepIndexFromLocation(lat, lng);
