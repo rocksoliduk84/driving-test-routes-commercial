@@ -1381,35 +1381,23 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
     origin = navLastKnownPosition || navCurrentCentre;
     destination = navCurrentCentre;
     waypoints = [];
-  } else if (navCurrentWaypoints.length) {
-    let remaining = [];
-
-    if (isWithinRadius && navLastKnownPosition) {
+    } else if (navCurrentWaypoints.length) {
+    if (navLastKnownPosition) {
       const nearest = getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
+
       const startIdx = nearest
-        ? Math.min(nearest.index + 1, Math.max(1, navCurrentWaypoints.length - 1))
+        ? Math.max(1, Math.min(nearest.index, Math.max(1, navCurrentWaypoints.length - 2)))
         : 1;
-      remaining = navCurrentWaypoints.slice(startIdx);
+
+      origin = navLastKnownPosition;
+      destination = navCurrentWaypoints[startIdx] || navCurrentCentre;
+      waypoints = [];
     } else {
-      const phase2 = navPhase === 2;
-
-      if (!phase2) {
-        remaining = navCurrentWaypoints.slice(1);
-      } else {
-        const nearest = navLastKnownPosition
-          ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
-          : null;
-        const startIdx = nearest
-          ? Math.min(nearest.index + 1, Math.max(1, navCurrentWaypoints.length - 1))
-          : 1;
-        remaining = navCurrentWaypoints.slice(startIdx);
-      }
+      origin = navCurrentWaypoints[0] || navCurrentCentre;
+      destination = navCurrentWaypoints[1] || navCurrentCentre;
+      waypoints = [];
     }
-
-    destination = remaining.length ? remaining[remaining.length - 1] : navCurrentCentre;
-    waypoints = remaining
-      .slice(0, Math.max(0, remaining.length - 1))
-      .slice(0, NAV_GOOGLE_MAX_WAYPOINTS);
+  }
   }
 
   const params = new URLSearchParams({
