@@ -1919,19 +1919,19 @@ const shouldAwaitRouteJoin =
   } else {
     navAwaitingRouteJoin = false;
 
-        if (nearCentreStart) {
-      navCurrentStepIdx = 0;
-      document.getElementById('nav-instruction').textContent =
-        `Starting the route from near ${centre ? centre.name : 'the test centre'}...`;
-    } else if (resumeMode === 'radius-start') {
-      document.getElementById('nav-instruction').textContent = `You are within ${NAV_START_RADIUS_MILES} mile of ${centre ? centre.name : 'the test centre'}. Starting the route from your current location...`;
-    } else if (resumeState && resumeMode === 'continue') {
-      document.getElementById('nav-instruction').textContent = 'Resuming route from your current location...';
-    } else if (resumeState && resumeMode === 'rejoin') {
-      document.getElementById('nav-instruction').textContent = 'Guiding you back to the nearest point on the route...';
-    } else if (resumeMode === 'continue') {
-      document.getElementById('nav-instruction').textContent = 'Starting the remaining route from your current location...';
-    }
+          if (nearCentreStart) {
+    navCurrentStepIdx = 0;
+    document.getElementById('nav-instruction').textContent =
+      `Starting the route from near ${centre ? centre.name : 'the test centre'}...`;
+  } else if (resumeMode === 'radius-start') {
+    document.getElementById('nav-instruction').textContent = `You are within ${NAV_START_RADIUS_MILES} mile of ${centre ? centre.name : 'the test centre'}. Starting the route from your current location...`;
+  } else if (resumeState && resumeMode === 'continue') {
+    document.getElementById('nav-instruction').textContent = 'Resuming route from your current location...';
+  } else if (resumeState && resumeMode === 'rejoin') {
+    document.getElementById('nav-instruction').textContent = 'Guiding you back to the nearest point on the route...';
+  } else if (resumeMode === 'continue') {
+    document.getElementById('nav-instruction').textContent = 'Starting the remaining route from your current location...';
+  }
 
     renderNavSteps();
     if (resumeMode !== 'rejoin') speakCurrentStep();
