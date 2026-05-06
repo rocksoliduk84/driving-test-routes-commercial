@@ -1261,6 +1261,7 @@ const NAV_START_RADIUS_METERS = NAV_START_RADIUS_MILES * 1609.344;
 const NAV_OFF_ROUTE_THRESHOLD_METERS = 120;
 const NAV_REJOIN_THRESHOLD_METERS = 55;
 const NAV_GOOGLE_MAX_WAYPOINTS = 8;
+const NAV_CENTRE_START_TOLERANCE_METERS = 250;
 const NAV_RESUME_KEY = 'dtrm_nav_resume_v12';
 const NAV_RESUME_MAX_AGE_MS = 1000 * 60 * 120;
 
@@ -1291,7 +1292,10 @@ function formatDistanceMetersShort(meters) {
   if (meters < 1000) return `${Math.round(meters)} m`;
   return `${(meters / 1000).toFixed(1)} km`;
 }
-
+function isNearCentreStart(lat, lng) {
+  return !!navCurrentCentre &&
+    distanceBetweenPointsMeters(lat, lng, navCurrentCentre.lat, navCurrentCentre.lng) <= NAV_CENTRE_START_TOLERANCE_METERS;
+}
 function buildOsrmRouteUrl(waypoints) {
   const coords = waypoints.map(w => `${w.lng},${w.lat}`).join(';');
   return `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`;
