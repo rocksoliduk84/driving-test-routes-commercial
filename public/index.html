@@ -1404,7 +1404,6 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
       waypoints = limitedRemaining.slice(0, -1);
     }
   }
-  }
   const params = new URLSearchParams({
     api: '1',
     origin: `${origin.lat},${origin.lng}`,
