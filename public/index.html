@@ -1385,29 +1385,34 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
     origin = navLastKnownPosition || navCurrentCentre;
     destination = navCurrentCentre;
     waypoints = [];
-      } else if (navCurrentWaypoints.length) {
-    if (navLastKnownPosition) {
-      const nearest = getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
+} else if (navCurrentWaypoints.length) {
+  if (navLastKnownPosition) {
+    const nearCentreStart = isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng);
+    const nearest = nearCentreStart
+      ? null
+      : getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
 
-      const startIdx = nearest
-        ? Math.max(1, Math.min(nearest.index, Math.max(1, navCurrentWaypoints.length - 2)))
-        : 1;
+    const startIdx = nearCentreStart
+      ? 1
+      : (nearest
+          ? Math.max(1, Math.min(nearest.index, Math.max(1, navCurrentWaypoints.length - 2)))
+          : 1);
 
-      const remainingPoints = navCurrentWaypoints.slice(startIdx);
-      const limitedRemaining = remainingPoints.slice(0, NAV_GOOGLE_MAX_WAYPOINTS + 1);
+    const remainingPoints = navCurrentWaypoints.slice(startIdx);
+    const limitedRemaining = remainingPoints.slice(0, NAV_GOOGLE_MAX_WAYPOINTS + 1);
 
-      origin = navLastKnownPosition;
-      destination = limitedRemaining[limitedRemaining.length - 1] || navCurrentCentre;
-      waypoints = limitedRemaining.slice(0, -1);
-    } else {
-      const remainingPoints = navCurrentWaypoints.slice(1);
-      const limitedRemaining = remainingPoints.slice(0, NAV_GOOGLE_MAX_WAYPOINTS + 1);
+    origin = navLastKnownPosition;
+    destination = limitedRemaining[limitedRemaining.length - 1] || navCurrentCentre;
+    waypoints = limitedRemaining.slice(0, -1);
+  } else {
+    const remainingPoints = navCurrentWaypoints.slice(1);
+    const limitedRemaining = remainingPoints.slice(0, NAV_GOOGLE_MAX_WAYPOINTS + 1);
 
-      origin = navCurrentWaypoints[0] || navCurrentCentre;
-      destination = limitedRemaining[limitedRemaining.length - 1] || navCurrentCentre;
-      waypoints = limitedRemaining.slice(0, -1);
-    }
+    origin = navCurrentWaypoints[0] || navCurrentCentre;
+    destination = limitedRemaining[limitedRemaining.length - 1] || navCurrentCentre;
+    waypoints = limitedRemaining.slice(0, -1);
   }
+}
   const params = new URLSearchParams({
     api: '1',
     origin: `${origin.lat},${origin.lng}`,
@@ -1541,7 +1546,7 @@ function ensureNavStartChoiceCard() {
     <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#fff;">Choose how to start this route</div>
     <div id="nav-start-choice-text" style="font-size:12px;line-height:1.6;color:var(--grey);margin-bottom:12px;"></div>
     <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="nav-btn nav-btn-next" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('remaining-route')">🗺️ Start navigation from current location</button>
+            <button class="nav-btn nav-btn-next" style="width:100%;justify-content:center;" onclick="chooseNavStartMode('remaining-route')">🧭 Use internal map from current location</button>
       <button class="nav-btn nav-btn-begin" style="width:100%;justify-content:center;" onclick="chooseNavStartMode('centre-first')">📍 Use internal map via test centre first</button>
       <button class="nav-btn nav-btn-google" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('remaining-route')">📲 Open Google Maps from current location</button>
       <button class="nav-btn nav-btn-google" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('centre-first')">📍 Open Google Maps via test centre first</button>
@@ -1579,7 +1584,18 @@ function chooseNavStartMode(mode) {
     return;
   }
 
-  openInGoogleMaps('remaining-route');
+  const directState = navLastKnownPosition
+    ? {
+        phase: 2,
+        stepIdx: isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)
+          ? 0
+          : estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng),
+        lastKnownLat: navLastKnownPosition.lat,
+        lastKnownLng: navLastKnownPosition.lng
+      }
+    : null;
+
+  startPhase2Navigation(directState, 'continue');
 }
 function renderRouteToCentrePreview(centre) {
   if (!navLastKnownPosition) {
