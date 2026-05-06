@@ -1900,22 +1900,30 @@ function startPhase2Navigation(resumeState = null, resumeMode = 'restart') {
   document.getElementById('nav-controls').style.display = 'flex';
   refreshGoogleButtonState();
 
-    const nearestAtStart = navLastKnownPosition
-    ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
-    : null;
+    const nearCentreStart = navLastKnownPosition
+  ? isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)
+  : false;
 
-  const shouldAwaitRouteJoin =
-    resumeMode !== 'rejoin' &&
-    !!navLastKnownPosition &&
-    !!nearestAtStart &&
-    nearestAtStart.distanceMeters > NAV_REJOIN_THRESHOLD_METERS;
+const nearestAtStart = (!nearCentreStart && navLastKnownPosition)
+  ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
+  : null;
 
+const shouldAwaitRouteJoin =
+  !nearCentreStart &&
+  resumeMode !== 'rejoin' &&
+  !!navLastKnownPosition &&
+  !!nearestAtStart &&
+  nearestAtStart.distanceMeters > NAV_REJOIN_THRESHOLD_METERS;
   if (shouldAwaitRouteJoin) {
     enterAwaitingRouteJoin(nearestAtStart.distanceMeters);
   } else {
     navAwaitingRouteJoin = false;
 
-    if (resumeMode === 'radius-start') {
+        if (nearCentreStart) {
+      navCurrentStepIdx = 0;
+      document.getElementById('nav-instruction').textContent =
+        `Starting the route from near ${centre ? centre.name : 'the test centre'}...`;
+    } else if (resumeMode === 'radius-start') {
       document.getElementById('nav-instruction').textContent = `You are within ${NAV_START_RADIUS_MILES} mile of ${centre ? centre.name : 'the test centre'}. Starting the route from your current location...`;
     } else if (resumeState && resumeMode === 'continue') {
       document.getElementById('nav-instruction').textContent = 'Resuming route from your current location...';
