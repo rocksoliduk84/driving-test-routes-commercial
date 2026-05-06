@@ -1641,34 +1641,65 @@ function getRouteWaypoints(centre, routeNum, isAdi) {
   const safeRouteNum = Math.max(1, parseInt(routeNum, 10) || 1);
   const lat = centre.lat;
   const lng = centre.lng;
-  // Generate realistic waypoints in a loop around the centre
-  // Each route uses a slightly different offset pattern
-  const offset = 0.008 + (safeRouteNum * 0.002);
-  const adiOffset = isAdi ? 0.005 : 0;
-  const seed = safeRouteNum + (isAdi ? 100 : 0);
-  
-  // Create a varied route loop
+
+  const offset = (isAdi ? 0.014 : 0.012) + (((safeRouteNum - 1) % 3) * 0.002);
+  const adiLatShift = isAdi ? offset * 0.08 : 0;
+  const adiLngShift = isAdi ? -offset * 0.05 : 0;
+
   const patterns = [
-    // Pattern A: North loop
-    [{lat:lat+offset, lng:lng},{lat:lat+offset*0.8, lng:lng+offset},{lat:lat, lng:lng+offset*1.2},{lat:lat-offset*0.5, lng:lng+offset*0.8},{lat:lat-offset*0.3, lng:lng}],
-    // Pattern B: East loop  
-    [{lat:lat, lng:lng+offset},{lat:lat-offset*0.8, lng:lng+offset*0.9},{lat:lat-offset, lng:lng},{lat:lat-offset*0.5, lng:lng-offset*0.5},{lat:lat, lng:lng-offset*0.3}],
-    // Pattern C: South loop
-    [{lat:lat-offset, lng:lng},{lat:lat-offset*0.9, lng:lng+offset*0.8},{lat:lat-offset*0.3, lng:lng+offset},{lat:lat+offset*0.3, lng:lng+offset*0.5},{lat:lat+offset*0.2, lng:lng}],
-    // Pattern D: West loop
-    [{lat:lat, lng:lng-offset},{lat:lat+offset*0.7, lng:lng-offset*0.8},{lat:lat+offset, lng:lng},{lat:lat+offset*0.4, lng:lng+offset*0.4},{lat:lat, lng:lng+offset*0.2}],
-    // Pattern E: Large loop
-    [{lat:lat+offset+adiOffset, lng:lng+offset*0.5},{lat:lat+offset*0.5, lng:lng+offset+adiOffset},{lat:lat-offset*0.3, lng:lng+offset+adiOffset},{lat:lat-offset-adiOffset, lng:lng},{lat:lat-offset*0.5, lng:lng-offset*0.5}],
+    [
+      { lat: lat + offset * 0.9, lng: lng - offset * 0.2 },
+      { lat: lat + offset * 1.2, lng: lng + offset * 0.6 },
+      { lat: lat + offset * 0.7, lng: lng + offset * 1.3 },
+      { lat: lat,                lng: lng + offset * 1.4 },
+      { lat: lat - offset * 0.6, lng: lng + offset * 1.0 },
+      { lat: lat - offset * 1.0, lng: lng + offset * 0.2 },
+      { lat: lat - offset * 0.8, lng: lng - offset * 0.8 },
+      { lat: lat - offset * 0.2, lng: lng - offset * 1.2 }
+    ],
+    [
+      { lat: lat,                lng: lng + offset * 1.0 },
+      { lat: lat - offset * 0.7, lng: lng + offset * 1.3 },
+      { lat: lat - offset * 1.2, lng: lng + offset * 0.5 },
+      { lat: lat - offset * 1.0, lng: lng - offset * 0.6 },
+      { lat: lat - offset * 0.3, lng: lng - offset * 1.2 },
+      { lat: lat + offset * 0.5, lng: lng - offset * 1.1 },
+      { lat: lat + offset * 1.1, lng: lng - offset * 0.2 },
+      { lat: lat + offset * 0.8, lng: lng + offset * 0.7 }
+    ],
+    [
+      { lat: lat + offset * 1.0, lng: lng + offset * 0.1 },
+      { lat: lat + offset * 1.3, lng: lng + offset * 0.9 },
+      { lat: lat + offset * 0.6, lng: lng + offset * 1.4 },
+      { lat: lat - offset * 0.2, lng: lng + offset * 1.1 },
+      { lat: lat - offset * 0.9, lng: lng + offset * 0.9 },
+      { lat: lat - offset * 1.2, lng: lng - offset * 0.1 },
+      { lat: lat - offset * 0.5, lng: lng - offset * 1.0 },
+      { lat: lat + offset * 0.4, lng: lng - offset * 1.2 }
+    ],
+    [
+      { lat: lat + offset * 0.8, lng: lng - offset * 0.4 },
+      { lat: lat + offset * 1.1, lng: lng + offset * 0.4 },
+      { lat: lat + offset * 0.9, lng: lng + offset * 1.2 },
+      { lat: lat + offset * 0.1, lng: lng + offset * 1.5 },
+      { lat: lat - offset * 0.8, lng: lng + offset * 1.1 },
+      { lat: lat - offset * 1.1, lng: lng + offset * 0.1 },
+      { lat: lat - offset * 0.9, lng: lng - offset * 0.9 },
+      { lat: lat - offset * 0.1, lng: lng - offset * 1.3 }
+    ]
   ];
-  
+
   const patIdx = ((safeRouteNum - 1) % patterns.length + patterns.length) % patterns.length;
-  const selectedPattern = Array.isArray(patterns[patIdx]) ? patterns[patIdx] : patterns[0];
-  const waypoints = [
-    {lat: lat, lng: lng}, // Start: test centre
+  const selectedPattern = patterns[patIdx].map(point => ({
+    lat: point.lat + adiLatShift,
+    lng: point.lng + adiLngShift
+  }));
+
+  return [
+    { lat, lng },
     ...selectedPattern,
-    {lat: lat, lng: lng}  // End: back to test centre
+    { lat, lng }
   ];
-  return waypoints;
 }
 
 // Get route-specific turn-by-turn instructions based on centre
@@ -2010,6 +2041,17 @@ function continueFromCurrentLocation() {
   }
   clearRejoinRouteOverlay();
   hideOffRouteCard();
+
+  if (isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)) {
+    activateRouteGuidanceFromCurrentLocation(navLastKnownPosition.lat, navLastKnownPosition.lng, false);
+    navCurrentStepIdx = 0;
+    renderNavSteps();
+    document.getElementById('nav-instruction').textContent =
+      `Starting the route from near ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}...`;
+    speakCurrentStep();
+    showToast('Starting the route from near the test centre');
+    return;
+  }
 
   const nearest = getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
 
