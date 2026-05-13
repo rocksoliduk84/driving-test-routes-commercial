@@ -1413,13 +1413,16 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
     waypoints = limitedRemaining.slice(0, -1);
   }
 }
-  const params = new URLSearchParams({
+    const params = new URLSearchParams({
     api: '1',
     origin: `${origin.lat},${origin.lng}`,
     destination: `${destination.lat},${destination.lng}`,
-    travelmode: 'driving',
-    dir_action: 'navigate'
+    travelmode: 'driving'
   });
+
+  if (!waypoints.length || mode === 'centre-first') {
+    params.set('dir_action', 'navigate');
+  }
 
   if (waypoints.length) {
     params.set('waypoints', waypoints.map(p => `${p.lat},${p.lng}`).join('|'));
