@@ -1920,6 +1920,7 @@ const nearestAtStart = (!nearCentreStart && navLastKnownPosition)
 const shouldAwaitRouteJoin =
   !nearCentreStart &&
   resumeMode !== 'rejoin' &&
+  resumeMode !== 'continue' &&
   !!navLastKnownPosition &&
   !!nearestAtStart &&
   nearestAtStart.distanceMeters > NAV_REJOIN_THRESHOLD_METERS;
