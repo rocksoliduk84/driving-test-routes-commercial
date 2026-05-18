@@ -1361,16 +1361,47 @@ function refreshGoogleButtonState() {
 function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
 
-  const origin = navLastKnownPosition || navCurrentCentre;
-  const destination = navCurrentCentre;
+  const currentPos = navLastKnownPosition || navCurrentCentre;
+
+  if (mode === 'centre-first' || !navCurrentWaypoints.length) {
+    const params = new URLSearchParams({
+      api: '1',
+      origin: `${currentPos.lat},${currentPos.lng}`,
+      destination: `${navCurrentCentre.lat},${navCurrentCentre.lng}`,
+      travelmode: 'driving',
+      dir_action: 'navigate'
+    });
+
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
+  }
+
+  const nearCentreStart = navLastKnownPosition
+    ? isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)
+    : false;
+
+  const nearest = (!nearCentreStart && navLastKnownPosition)
+    ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
+    : null;
+
+  const startIdx = nearCentreStart
+    ? 1
+    : (nearest
+        ? Math.max(1, Math.min(nearest.index, Math.max(1, navCurrentWaypoints.length - 2)))
+        : 1);
+
+  const remainingWaypoints = navCurrentWaypoints.slice(startIdx, -1);
+  const limitedWaypoints = remainingWaypoints.slice(0, NAV_GOOGLE_MAX_WAYPOINTS);
 
   const params = new URLSearchParams({
     api: '1',
-    origin: `${origin.lat},${origin.lng}`,
-    destination: `${destination.lat},${destination.lng}`,
-    travelmode: 'driving',
-    dir_action: 'navigate'
+    origin: `${currentPos.lat},${currentPos.lng}`,
+    destination: `${navCurrentCentre.lat},${navCurrentCentre.lng}`,
+    travelmode: 'driving'
   });
+
+  if (limitedWaypoints.length) {
+    params.set('waypoints', limitedWaypoints.map(p => `${p.lat},${p.lng}`).join('|'));
+  }
 
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
