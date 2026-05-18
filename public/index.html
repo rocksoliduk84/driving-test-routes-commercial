@@ -2017,30 +2017,36 @@ function continueFromCurrentLocation() {
     showToast('Current location unavailable');
     return;
   }
+
   clearRejoinRouteOverlay();
   hideOffRouteCard();
+  navAwaitingRouteJoin = false;
 
-  if (isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)) {
-    activateRouteGuidanceFromCurrentLocation(navLastKnownPosition.lat, navLastKnownPosition.lng, false);
+  const nearCentreStart = isNearCentreStart(
+    navLastKnownPosition.lat,
+    navLastKnownPosition.lng
+  );
+
+  activateRouteGuidanceFromCurrentLocation(
+    navLastKnownPosition.lat,
+    navLastKnownPosition.lng,
+    false
+  );
+
+  if (nearCentreStart) {
     navCurrentStepIdx = 0;
-    renderNavSteps();
     document.getElementById('nav-instruction').textContent =
       `Starting the route from near ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}...`;
-    speakCurrentStep();
     showToast('Starting the route from near the test centre');
-    return;
+  } else {
+    document.getElementById('nav-instruction').textContent =
+      'Starting the remaining route from your current location...';
+    showToast('Starting the remaining route from your current location');
   }
 
-  const nearest = getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
-
-  if (nearest && nearest.distanceMeters > NAV_REJOIN_THRESHOLD_METERS) {
-    enterAwaitingRouteJoin(nearest.distanceMeters);
-    showToast('Drive back to the highlighted route to begin guidance');
-    return;
-  }
-
-  activateRouteGuidanceFromCurrentLocation(navLastKnownPosition.lat, navLastKnownPosition.lng, true);
-  showToast('Continuing from your current location');
+  renderNavSteps();
+  speakCurrentStep();
+  saveNavigationState('continue-from-current-location');
 }
 
 async function rejoinCurrentRoute() {
