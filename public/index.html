@@ -1543,7 +1543,6 @@ function chooseNavStartMode(mode) {
     if (controls) controls.style.display = 'none';
     showToast(`Navigating back to ${navCurrentCentre.name}. When you are within ${NAV_AUTO_START_FROM_CENTRE_METERS}m, you can choose to start a new route.`);
   }
-}
 function renderRouteToCentrePreview(centre) {
   if (!navLastKnownPosition) {
     startPhase2Navigation();
