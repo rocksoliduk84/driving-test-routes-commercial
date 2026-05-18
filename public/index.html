@@ -1529,25 +1529,20 @@ function chooseNavStartMode(mode) {
   if (!navCurrentCentre) return;
 
   navAutoStartFromCentre = mode === 'centre-first';
+  navPhase = 1;
+
+  renderRouteToCentrePreview(navCurrentCentre);
+  startGPSTracking(mode === 'centre-first' ? 'centre-first' : 'return-to-centre');
 
   if (mode === 'centre-first') {
-    navPhase = 1;
-    renderRouteToCentrePreview(navCurrentCentre);
-    startGPSTracking('centre-first');
     showToast(`Drive to within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} to auto-start the route`);
-    return;
+  } else {
+    const beginBtn = document.getElementById('nav-begin-btn');
+    const controls = document.getElementById('nav-controls');
+    if (beginBtn) beginBtn.style.display = 'none';
+    if (controls) controls.style.display = 'none';
+    showToast(`Navigating back to ${navCurrentCentre.name}. When you are within ${NAV_AUTO_START_FROM_CENTRE_METERS}m, you can choose to start a new route.`);
   }
-
-  const directState = navLastKnownPosition ? {
-    phase: 2,
-    stepIdx: isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)
-      ? 0
-      : estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng),
-    lastKnownLat: navLastKnownPosition.lat,
-    lastKnownLng: navLastKnownPosition.lng
-  } : null;
-
-  startPhase2Navigation(directState, 'continue');
 }
 function renderRouteToCentrePreview(centre) {
   if (!navLastKnownPosition) {
