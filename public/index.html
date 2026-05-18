@@ -1361,72 +1361,16 @@ function refreshGoogleButtonState() {
 function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
 
-  const computedDistanceToCentre =
-    typeof navCurrentDistanceToCentreMeters === 'number'
-      ? navCurrentDistanceToCentreMeters
-      : (navLastKnownPosition
-          ? distanceBetweenPointsMeters(
-              navLastKnownPosition.lat,
-              navLastKnownPosition.lng,
-              navCurrentCentre.lat,
-              navCurrentCentre.lng
-            )
-          : null);
+  const origin = navLastKnownPosition || navCurrentCentre;
+  const destination = navCurrentCentre;
 
-  const isWithinRadius =
-    computedDistanceToCentre !== null &&
-    computedDistanceToCentre <= NAV_START_RADIUS_METERS;
-
-  let origin = navLastKnownPosition || navCurrentWaypoints[0] || navCurrentCentre;
-  let destination = navCurrentCentre;
-  let waypoints = [];
-
-  if (mode === 'centre-first') {
-    origin = navLastKnownPosition || navCurrentCentre;
-    destination = navCurrentCentre;
-    waypoints = [];
-} else if (navCurrentWaypoints.length) {
-  if (navLastKnownPosition) {
-    const nearCentreStart = isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng);
-    const nearest = nearCentreStart
-      ? null
-      : getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
-
-    const startIdx = nearCentreStart
-      ? 1
-      : (nearest
-          ? Math.max(1, Math.min(nearest.index, Math.max(1, navCurrentWaypoints.length - 2)))
-          : 1);
-
-    const remainingPoints = navCurrentWaypoints.slice(startIdx);
-    const limitedRemaining = remainingPoints.slice(0, NAV_GOOGLE_MAX_WAYPOINTS + 1);
-
-    origin = navLastKnownPosition;
-    destination = limitedRemaining[limitedRemaining.length - 1] || navCurrentCentre;
-    waypoints = limitedRemaining.slice(0, -1);
-  } else {
-    const remainingPoints = navCurrentWaypoints.slice(1);
-    const limitedRemaining = remainingPoints.slice(0, NAV_GOOGLE_MAX_WAYPOINTS + 1);
-
-    origin = navCurrentWaypoints[0] || navCurrentCentre;
-    destination = limitedRemaining[limitedRemaining.length - 1] || navCurrentCentre;
-    waypoints = limitedRemaining.slice(0, -1);
-  }
-}
-    const params = new URLSearchParams({
+  const params = new URLSearchParams({
     api: '1',
     origin: `${origin.lat},${origin.lng}`,
     destination: `${destination.lat},${destination.lng}`,
-    travelmode: 'driving'
+    travelmode: 'driving',
+    dir_action: 'navigate'
   });
-
-  if (!waypoints.length || mode === 'centre-first') {
-    params.set('dir_action', 'navigate');
-  }
-
-  if (waypoints.length) {
-    params.set('waypoints', waypoints.map(p => `${p.lat},${p.lng}`).join('|'));
-  }
 
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
