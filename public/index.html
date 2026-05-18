@@ -2078,31 +2078,45 @@ function startGPSTracking(resumeMode = 'restart') {
       }
 
       if (
-        navAutoStartFromCentre &&
-        navPhase === 1 &&
-        navCurrentCentre &&
-        navCurrentDistanceToCentreMeters !== null
-      ) {
-        const instructionEl = document.getElementById('nav-instruction');
-        const phaseLabelEl = document.getElementById('nav-phase-label');
+  navPhase === 1 &&
+  navCurrentCentre &&
+  navCurrentDistanceToCentreMeters !== null
+) {
+  const instructionEl = document.getElementById('nav-instruction');
+  const phaseLabelEl = document.getElementById('nav-phase-label');
 
-        if (instructionEl) {
-          instructionEl.textContent =
-            `Drive to ${navCurrentCentre.name} — ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} remaining`;
-        }
+  if (instructionEl) {
+    instructionEl.textContent =
+      `Drive to ${navCurrentCentre.name} — ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} remaining`;
+  }
 
-        if (phaseLabelEl) {
-          phaseLabelEl.textContent =
-            `Phase 1: ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} to test centre`;
-        }
+  if (phaseLabelEl) {
+    phaseLabelEl.textContent =
+      `Phase 1: ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} to test centre`;
+  }
 
-        if (navCurrentDistanceToCentreMeters <= NAV_AUTO_START_FROM_CENTRE_METERS) {
-          navAutoStartFromCentre = false;
-          showToast(`Within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} — starting route`);
-          beginTestRoute();
-          return;
-        }
-      }
+  if (navCurrentDistanceToCentreMeters <= NAV_AUTO_START_FROM_CENTRE_METERS) {
+    if (navAutoStartFromCentre) {
+      navAutoStartFromCentre = false;
+      showToast(`Within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} — starting route`);
+      beginTestRoute();
+      return;
+    }
+
+    const beginBtn = document.getElementById('nav-begin-btn');
+    const controls = document.getElementById('nav-controls');
+    const choiceCard = document.getElementById('nav-start-choice');
+    const isChoiceVisible = choiceCard && choiceCard.style.display === 'block';
+
+    if (beginBtn) beginBtn.style.display = 'inline-flex';
+    if (controls) controls.style.display = 'none';
+
+    if (!isChoiceVisible) {
+      showNavStartChoiceCard(navCurrentDistanceToCentreMeters);
+      showToast(`Within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} — choose how to start the next route`);
+    }
+  }
+}
 
       if (navPhase === 2 && navCurrentSteps.length) {
         const nearest = getNearestRoutePoint(lat, lng);
