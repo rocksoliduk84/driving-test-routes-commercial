@@ -1559,21 +1559,24 @@ function chooseNavStartMode(mode) {
   hideNavStartChoiceCard();
   if (!navCurrentCentre) return;
 
+  navAutoStartFromCentre = mode === 'centre-first';
+
   if (mode === 'centre-first') {
+    navPhase = 1;
     renderRouteToCentrePreview(navCurrentCentre);
+    startGPSTracking('centre-first');
+    showToast(`Drive to within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} to auto-start the route`);
     return;
   }
 
-  const directState = navLastKnownPosition
-    ? {
-        phase: 2,
-        stepIdx: isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)
-          ? 0
-          : estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng),
-        lastKnownLat: navLastKnownPosition.lat,
-        lastKnownLng: navLastKnownPosition.lng
-      }
-    : null;
+  const directState = navLastKnownPosition ? {
+    phase: 2,
+    stepIdx: isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)
+      ? 0
+      : estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng),
+    lastKnownLat: navLastKnownPosition.lat,
+    lastKnownLng: navLastKnownPosition.lng
+  } : null;
 
   startPhase2Navigation(directState, 'continue');
 }
