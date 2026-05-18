@@ -1983,40 +1983,28 @@ function speak(text) {
 
 
 function continueFromCurrentLocation() {
-  if (!navLastKnownPosition) {
+  if (!navLastKnownPosition || !navCurrentCentre) {
     showToast('Current location unavailable');
     return;
   }
 
   clearRejoinRouteOverlay();
   hideOffRouteCard();
+  hideNavStartChoiceCard();
   navAwaitingRouteJoin = false;
+  navAutoStartFromCentre = false;
+  navPhase = 1;
 
-  const nearCentreStart = isNearCentreStart(
-    navLastKnownPosition.lat,
-    navLastKnownPosition.lng
-  );
+  renderRouteToCentrePreview(navCurrentCentre);
+  startGPSTracking('return-to-centre');
 
-  activateRouteGuidanceFromCurrentLocation(
-    navLastKnownPosition.lat,
-    navLastKnownPosition.lng,
-    false
-  );
+  const beginBtn = document.getElementById('nav-begin-btn');
+  const controls = document.getElementById('nav-controls');
+  if (beginBtn) beginBtn.style.display = 'none';
+  if (controls) controls.style.display = 'none';
 
-  if (nearCentreStart) {
-    navCurrentStepIdx = 0;
-    document.getElementById('nav-instruction').textContent =
-      `Starting the route from near ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}...`;
-    showToast('Starting the route from near the test centre');
-  } else {
-    document.getElementById('nav-instruction').textContent =
-      'Starting the remaining route from your current location...';
-    showToast('Starting the remaining route from your current location');
-  }
-
-  renderNavSteps();
-  speakCurrentStep();
-  saveNavigationState('continue-from-current-location');
+  showToast(`Navigating back to ${navCurrentCentre.name}. When you are within ${NAV_AUTO_START_FROM_CENTRE_METERS}m, you can choose to start a new route.`);
+  saveNavigationState('continue-to-centre');
 }
 
 async function rejoinCurrentRoute() {
