@@ -1527,21 +1527,55 @@ function chooseNavStartMode(mode) {
   hideNavStartChoiceCard();
   if (!navCurrentCentre) return;
 
-  navAutoStartFromCentre = mode === 'centre-first';
-  navPhase = 1;
-
-  renderRouteToCentrePreview(navCurrentCentre);
-  startGPSTracking(mode === 'centre-first' ? 'centre-first' : 'return-to-centre');
-
   if (mode === 'centre-first') {
+    navAutoStartFromCentre = true;
+    navPhase = 1;
+    renderRouteToCentrePreview(navCurrentCentre);
+    startGPSTracking('centre-first');
     showToast(`Drive to within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} to auto-start the route`);
-  } else {
-    const beginBtn = document.getElementById('nav-begin-btn');
-    const controls = document.getElementById('nav-controls');
-    if (beginBtn) beginBtn.style.display = 'none';
-    if (controls) controls.style.display = 'none';
-    showToast(`Navigating back to ${navCurrentCentre.name}. When you are within ${NAV_AUTO_START_FROM_CENTRE_METERS}m, you can choose to start a new route.`);
+    return;
   }
+
+  navAutoStartFromCentre = false;
+
+  if (!navLastKnownPosition) {
+    startPhase2Navigation();
+    return;
+  }
+
+  clearRejoinRouteOverlay();
+  hideOffRouteCard();
+
+  navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(
+    navLastKnownPosition.lat,
+    navLastKnownPosition.lng,
+    navCurrentCentre.lat,
+    navCurrentCentre.lng
+  );
+
+  const stepIdx = estimateStepIndexFromLocation(
+    navLastKnownPosition.lat,
+    navLastKnownPosition.lng
+  );
+
+  const resumeState = {
+    phase: 2,
+    stepIdx,
+    lastKnownLat: navLastKnownPosition.lat,
+    lastKnownLng: navLastKnownPosition.lng
+  };
+
+  const startMode =
+    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS
+      ? 'radius-start'
+      : 'continue';
+
+  startPhase2Navigation(resumeState, startMode);
+  showToast(
+    startMode === 'radius-start'
+      ? `Within ${NAV_START_RADIUS_MILES} mile of ${navCurrentCentre.name} — starting the route from your current location`
+      : 'Starting the remaining route from your current location'
+  );
 }
 function renderRouteToCentrePreview(centre) {
   if (!navLastKnownPosition) {
@@ -1992,20 +2026,35 @@ function continueFromCurrentLocation() {
   hideNavStartChoiceCard();
   navAwaitingRouteJoin = false;
   navAutoStartFromCentre = false;
-  navPhase = 1;
 
-  renderRouteToCentrePreview(navCurrentCentre);
-  startGPSTracking('return-to-centre');
+  navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(
+    navLastKnownPosition.lat,
+    navLastKnownPosition.lng,
+    navCurrentCentre.lat,
+    navCurrentCentre.lng
+  );
 
-  const beginBtn = document.getElementById('nav-begin-btn');
-  const controls = document.getElementById('nav-controls');
-  if (beginBtn) beginBtn.style.display = 'none';
-  if (controls) controls.style.display = 'none';
+  const stepIdx = estimateStepIndexFromLocation(
+    navLastKnownPosition.lat,
+    navLastKnownPosition.lng
+  );
 
-  showToast(`Navigating back to ${navCurrentCentre.name}. When you are within ${NAV_AUTO_START_FROM_CENTRE_METERS}m, you can choose to start a new route.`);
-  saveNavigationState('continue-to-centre');
+  const resumeState = {
+    phase: 2,
+    stepIdx,
+    lastKnownLat: navLastKnownPosition.lat,
+    lastKnownLng: navLastKnownPosition.lng
+  };
+
+  const startMode =
+    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS
+      ? 'radius-start'
+      : 'continue';
+
+  startPhase2Navigation(resumeState, startMode);
+  showToast('Navigation resumed from your current location');
+  saveNavigationState('continue-current-location');
 }
-
 async function rejoinCurrentRoute() {
   if (!navLastKnownPosition || !navMap) {
     showToast('Current location unavailable');
