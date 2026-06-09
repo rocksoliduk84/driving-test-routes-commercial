@@ -1364,11 +1364,22 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
 
   const currentPos = navLastKnownPosition || navCurrentCentre;
+  let destination = navCurrentCentre;
+
+  if (mode !== 'centre-first' && navLastKnownPosition) {
+    const nearest = getNearestRoutePoint(
+      navLastKnownPosition.lat,
+      navLastKnownPosition.lng
+    );
+    if (nearest && nearest.point) {
+      destination = nearest.point;
+    }
+  }
 
   const params = new URLSearchParams({
     api: '1',
     origin: `${currentPos.lat},${currentPos.lng}`,
-    destination: `${navCurrentCentre.lat},${navCurrentCentre.lng}`,
+    destination: `${destination.lat},${destination.lng}`,
     travelmode: 'driving',
     dir_action: 'navigate'
   });
