@@ -2061,10 +2061,10 @@ function continueFromCurrentLocation() {
   const startMode =
     navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS
       ? 'radius-start'
-      : 'continue';
+      : 'rejoin';
 
   startPhase2Navigation(resumeState, startMode);
-  showToast('Navigation resumed from your current location');
+  showToast('Guiding you from your current location back to the route');
   saveNavigationState('continue-current-location');
 }
 async function rejoinCurrentRoute() {
