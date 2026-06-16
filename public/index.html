@@ -1943,39 +1943,47 @@ function startPhase2Navigation(resumeState = null, resumeMode = 'restart') {
 const nearestAtStart = (!nearCentreStart && navLastKnownPosition)
   ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
   : null;
-
 const shouldAwaitRouteJoin =
   !nearCentreStart &&
-  resumeMode !== 'rejoin' &&
-  resumeMode !== 'continue' &&
   !!navLastKnownPosition &&
   !!nearestAtStart &&
-  nearestAtStart.distanceMeters > NAV_REJOIN_THRESHOLD_METERS;
-  if (shouldAwaitRouteJoin) {
-    enterAwaitingRouteJoin(nearestAtStart.distanceMeters);
-  } else {
-    navAwaitingRouteJoin = false;
+  nearestAtStart.distanceMeters > NAV_REJOIN_THRESHOLD_METERS &&
+  (resumeMode === 'rejoin' || resumeMode === 'restart');
 
-          if (nearCentreStart) {
+if (shouldAwaitRouteJoin) {
+  enterAwaitingRouteJoin(nearestAtStart.distanceMeters);
+} else {
+  navAwaitingRouteJoin = false;
+
+  if (nearCentreStart) {
     navCurrentStepIdx = 0;
     document.getElementById('nav-instruction').textContent =
       `Starting the route from near ${centre ? centre.name : 'the test centre'}...`;
   } else if (resumeMode === 'radius-start') {
-    document.getElementById('nav-instruction').textContent = `You are within ${NAV_START_RADIUS_MILES} mile of ${centre ? centre.name : 'the test centre'}. Starting the route from your current location...`;
+    document.getElementById('nav-instruction').textContent =
+      `You are within ${NAV_START_RADIUS_MILES} mile of ${centre ? centre.name : 'the test centre'}. Starting the route from your current location...`;
   } else if (resumeState && resumeMode === 'continue') {
-    document.getElementById('nav-instruction').textContent = 'Resuming route from your current location...';
+    document.getElementById('nav-instruction').textContent =
+      'Resuming route from your current location...';
   } else if (resumeState && resumeMode === 'rejoin') {
-    document.getElementById('nav-instruction').textContent = 'Guiding you back to the nearest point on the route...';
+    document.getElementById('nav-instruction').textContent =
+      'Guiding you back to the nearest point on the route...';
   } else if (resumeMode === 'continue') {
-    document.getElementById('nav-instruction').textContent = 'Starting the remaining route from your current location...';
+    document.getElementById('nav-instruction').textContent =
+      'Starting the remaining route from your current location...';
   }
 
-    renderNavSteps();
-    if (resumeMode !== 'rejoin') speakCurrentStep();
+  renderNavSteps();
+  if (!(resumeMode === 'rejoin' && shouldAwaitRouteJoin)) {
+    speakCurrentStep();
   }
+}
 
-  startGPSTracking(resumeMode);
-  if (resumeMode === 'rejoin') rejoinCurrentRoute();
+startGPSTracking(resumeMode);
+if (resumeMode === 'rejoin' && shouldAwaitRouteJoin) {
+  rejoinCurrentRoute();
+}
+saveNavigationState(resumeState ? 'resume-phase2' : 'phase2');
   saveNavigationState(resumeState ? 'resume-phase2' : 'phase2');
 }
 
