@@ -1565,11 +1565,7 @@ function chooseNavStartMode(mode) {
   );
 
   const nearest = getNearestRoutePoint(
-    navLastKnownPosition.lat,
-    navLastKnownPosition.lng
-  );
-
-  const stepIdx = estimateStepIndexFromLocation(
+      const stepIdx = estimateStepIndexFromLocation(
     navLastKnownPosition.lat,
     navLastKnownPosition.lng
   );
@@ -1581,26 +1577,18 @@ function chooseNavStartMode(mode) {
     lastKnownLng: navLastKnownPosition.lng
   };
 
-  const isWithinRadius =
-    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
-
-  const isAlreadyOnRoute =
-    !!nearest && nearest.distanceMeters <= NAV_REJOIN_THRESHOLD_METERS;
-
-  const startMode = isAlreadyOnRoute
-    ? (isWithinRadius ? 'radius-start' : 'continue')
-    : 'rejoin';
+  const startMode =
+    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS
+      ? 'radius-start'
+      : 'continue';
 
   startPhase2Navigation(resumeState, startMode);
 
   showToast(
     startMode === 'radius-start'
       ? `Within ${NAV_START_RADIUS_MILES} mile of ${navCurrentCentre.name} — starting the route from your current location`
-      : startMode === 'continue'
-        ? 'Starting the remaining route from your current location'
-        : 'Guiding you from your current location back to the route'
+      : 'Starting the remaining route from your current location'
   );
-  }
 function renderRouteToCentrePreview(centre) {
   if (!navLastKnownPosition) {
     startPhase2Navigation();
