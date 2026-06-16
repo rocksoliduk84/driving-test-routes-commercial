@@ -2071,27 +2071,20 @@ function continueFromCurrentLocation() {
     lastKnownLng: navLastKnownPosition.lng
   };
 
-  const isWithinRadius =
-    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
+  const startMode =
+  navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS
+    ? 'radius-start'
+    : 'continue';
 
-  const isAlreadyOnRoute =
-    !!nearest && nearest.distanceMeters <= NAV_REJOIN_THRESHOLD_METERS;
+startPhase2Navigation(resumeState, startMode);
 
-  const startMode = isAlreadyOnRoute
-    ? (isWithinRadius ? 'radius-start' : 'continue')
-    : 'rejoin';
+showToast(
+  startMode === 'radius-start'
+    ? `Within ${NAV_START_RADIUS_MILES} mile of ${navCurrentCentre.name} — starting the route from your current location`
+    : 'Navigation resumed from your current location'
+);
 
-  startPhase2Navigation(resumeState, startMode);
-
-  showToast(
-    startMode === 'radius-start'
-      ? `Within ${NAV_START_RADIUS_MILES} mile of ${navCurrentCentre.name} — starting the route from your current location`
-      : startMode === 'continue'
-        ? 'Navigation resumed from your current location'
-        : 'Guiding you from your current location back to the route'
-  );
-
-  saveNavigationState('continue-current-location');
+saveNavigationState('continue-current-location');
 }
 async function rejoinCurrentRoute() {
   if (!navLastKnownPosition || !navMap) {
