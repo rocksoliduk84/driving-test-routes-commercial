@@ -1361,28 +1361,29 @@ function refreshGoogleButtonState() {
 }
 
 function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
+function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
 
   const currentPos = navLastKnownPosition || navCurrentCentre;
-  let destination = navCurrentCentre;
+
+  const params = new URLSearchParams({
+    api: '1',
+    origin: `${currentPos.lat},${currentPos.lng}`,
+    destination: `${navCurrentCentre.lat},${navCurrentCentre.lng}`,
+    travelmode: 'driving',
+    dir_action: 'navigate'
+  });
 
   if (mode !== 'centre-first' && navLastKnownPosition) {
     const nearest = getNearestRoutePoint(
       navLastKnownPosition.lat,
       navLastKnownPosition.lng
     );
+
     if (nearest && nearest.point) {
-      destination = nearest.point;
+      params.set('waypoints', `${nearest.point.lat},${nearest.point.lng}`);
     }
   }
-
-  const params = new URLSearchParams({
-    api: '1',
-    origin: `${currentPos.lat},${currentPos.lng}`,
-    destination: `${destination.lat},${destination.lng}`,
-    travelmode: 'driving',
-    dir_action: 'navigate'
-  });
 
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
