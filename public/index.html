@@ -1977,9 +1977,7 @@ if (resumeMode === 'rejoin' && shouldAwaitRouteJoin) {
   rejoinCurrentRoute();
 }
 saveNavigationState(resumeState ? 'resume-phase2' : 'phase2');
-  saveNavigationState(resumeState ? 'resume-phase2' : 'phase2');
 }
-
 function renderNavSteps() {
   const list = document.getElementById('nav-steps-list');
   if (!list) return;
