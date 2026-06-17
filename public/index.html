@@ -1373,9 +1373,14 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
     );
 
     if (nearest) {
+      const aheadIndex = Math.min(
+        (nearest.index || 0) + 3,
+        Math.max(0, navCurrentWaypoints.length - 1)
+      );
+
       const routeTarget =
         (Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length
-          ? navCurrentWaypoints[Math.min((nearest.index || 0) + 1, navCurrentWaypoints.length - 1)]
+          ? navCurrentWaypoints[aheadIndex]
           : null) ||
         nearest.point ||
         navCurrentCentre;
