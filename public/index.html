@@ -1364,14 +1364,7 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
 
   const currentPos = navLastKnownPosition || navCurrentCentre;
-
-  const params = new URLSearchParams({
-    api: '1',
-    origin: `${currentPos.lat},${currentPos.lng}`,
-    destination: `${navCurrentCentre.lat},${navCurrentCentre.lng}`,
-    travelmode: 'driving',
-    dir_action: 'navigate'
-  });
+  let destination = navCurrentCentre;
 
   if (mode !== 'centre-first' && navLastKnownPosition) {
     const nearest = getNearestRoutePoint(
@@ -1379,10 +1372,25 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
       navLastKnownPosition.lng
     );
 
-    if (nearest && nearest.point) {
-      params.set('waypoints', `${nearest.point.lat},${nearest.point.lng}`);
+    if (nearest) {
+      const routeTarget =
+        (Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length
+          ? navCurrentWaypoints[Math.min((nearest.index || 0) + 1, navCurrentWaypoints.length - 1)]
+          : null) ||
+        nearest.point ||
+        navCurrentCentre;
+
+      destination = routeTarget;
     }
   }
+
+  const params = new URLSearchParams({
+    api: '1',
+    origin: `${currentPos.lat},${currentPos.lng}`,
+    destination: `${destination.lat},${destination.lng}`,
+    travelmode: 'driving',
+    dir_action: 'navigate'
+  });
 
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
