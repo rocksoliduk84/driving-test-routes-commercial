@@ -2207,31 +2207,40 @@ function startGPSTracking(resumeMode = 'restart') {
 }
 
       if (navPhase === 2 && navCurrentSteps.length) {
-        const nearest = getNearestRoutePoint(lat, lng);
+  const nearest = getNearestRoutePoint(lat, lng);
 
-        if (navAwaitingRouteJoin) {
-          if (nearest && nearest.distanceMeters <= NAV_REJOIN_THRESHOLD_METERS) {
-            activateRouteGuidanceFromCurrentLocation(lat, lng, true);
-            showToast('Back on the route — turn-by-turn guidance started');
-          } else if (nearest) {
-            enterAwaitingRouteJoin(nearest.distanceMeters);
-          }
-        } else {
-          const matchedIdx = estimateStepIndexFromLocation(lat, lng);
-          if (matchedIdx > navCurrentStepIdx && !navAutoAdvanceLock) {
-            navAutoAdvanceLock = true;
-            navCurrentStepIdx = matchedIdx;
-            renderNavSteps();
-            if (resumeMode !== 'rejoin') speakCurrentStep();
-            setTimeout(() => navAutoAdvanceLock = false, 1500);
-          }
+  if (navAwaitingRouteJoin) {
+    if (nearest && nearest.distanceMeters <= NAV_REJOIN_THRESHOLD_METERS) {
+      activateRouteGuidanceFromCurrentLocation(lat, lng, true);
+      showToast('Back on the route — turn-by-turn guidance started');
+    } else if (nearest) {
+      enterAwaitingRouteJoin(nearest.distanceMeters);
+    }
+  } else {
+    const matchedIdx = estimateStepIndexFromLocation(lat, lng);
+    if (matchedIdx > navCurrentStepIdx && !navAutoAdvanceLock) {
+      navAutoAdvanceLock = true;
+      navCurrentStepIdx = matchedIdx;
+      renderNavSteps();
+      if (resumeMode !== 'rejoin') speakCurrentStep();
+      setTimeout(() => navAutoAdvanceLock = false, 1500);
+    }
 
-          if (nearest && nearest.distanceMeters > NAV_OFF_ROUTE_THRESHOLD_METERS && !navRejoinTarget) {
-            showOffRouteCard(nearest.distanceMeters);
-          } else if (nearest && nearest.distanceMeters <= NAV_OFF_ROUTE_THRESHOLD_METERS) {
-            hideOffRouteCard();
-          }
-        }
+    const shouldShowOffRouteCard =
+      resumeMode === 'rejoin' &&
+      nearest &&
+      nearest.distanceMeters > NAV_OFF_ROUTE_THRESHOLD_METERS &&
+      !navRejoinTarget;
+
+    if (shouldShowOffRouteCard) {
+      showOffRouteCard(nearest.distanceMeters);
+    } else if (nearest && nearest.distanceMeters <= NAV_OFF_ROUTE_THRESHOLD_METERS) {
+      hideOffRouteCard();
+    } else if (resumeMode !== 'rejoin') {
+      hideOffRouteCard();
+    }
+  }
+}
       }
 
       if (navRejoinTarget) {
