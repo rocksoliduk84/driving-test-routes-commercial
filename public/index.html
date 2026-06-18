@@ -2291,12 +2291,15 @@ function beginTestRoute() {
   if (navLastKnownPosition && navCurrentCentre) {
     navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(navLastKnownPosition.lat, navLastKnownPosition.lng, navCurrentCentre.lat, navCurrentCentre.lng);
 
-        const isWithinRadius = navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
-    const isAtCentre = navCurrentDistanceToCentreMeters <= NAV_REJOIN_THRESHOLD_METERS;
+            const isWithinRadius = navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
+    const isAtCentre = navCurrentDistanceToCentreMeters <= NAV_AUTO_START_FROM_CENTRE_METERS;
 
     const stepIdx = isAtCentre
       ? 0
-      : estimateStepIndexFromLocation(navLastKnownPosition.lat, navLastKnownPosition.lng);
+      : estimateStepIndexFromLocation(
+          navLastKnownPosition.lat,
+          navLastKnownPosition.lng
+        );
 
     const directState = {
       phase: 2,
