@@ -1372,20 +1372,34 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
       navLastKnownPosition.lng
     );
 
-    if (nearest) {
-      const aheadIndex = Math.min(
-        (nearest.index || 0) + 3,
-        Math.max(0, navCurrentWaypoints.length - 1)
-      );
+    if (nearest && Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length) {
+      const startIdx = Math.max(0, (nearest.index || 0) + 1);
+      let routeTarget = null;
 
-      const routeTarget =
-        (Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length
-          ? navCurrentWaypoints[aheadIndex]
-          : null) ||
-        nearest.point ||
-        navCurrentCentre;
+      for (let i = startIdx; i < navCurrentWaypoints.length; i++) {
+        const p = navCurrentWaypoints[i];
+        const distFromCurrent = distanceBetweenPointsMeters(
+          currentPos.lat,
+          currentPos.lng,
+          p.lat,
+          p.lng
+        );
+        const distFromCentre = distanceBetweenPointsMeters(
+          navCurrentCentre.lat,
+          navCurrentCentre.lng,
+          p.lat,
+          p.lng
+        );
 
-      destination = routeTarget;
+        if (distFromCurrent >= 250 && distFromCentre >= 120) {
+          routeTarget = p;
+          break;
+        }
+      }
+
+      destination = routeTarget || nearest.point || navCurrentCentre;
+    } else if (nearest && nearest.point) {
+      destination = nearest.point;
     }
   }
 
