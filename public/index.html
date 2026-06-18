@@ -2227,26 +2227,26 @@ function startGPSTracking(resumeMode = 'restart') {
       `Phase 1: ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} to test centre`;
   }
 
-  if (navCurrentDistanceToCentreMeters <= NAV_AUTO_START_FROM_CENTRE_METERS) {
-    if (navAutoStartFromCentre) {
-      navAutoStartFromCentre = false;
-      showToast(`Within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} — starting route`);
-      beginTestRoute();
-      return;
-    }
+  const beginBtn = document.getElementById('nav-begin-btn');
+  const controls = document.getElementById('nav-controls');
+  const choiceCard = document.getElementById('nav-start-choice');
+  const isChoiceVisible = choiceCard && choiceCard.style.display === 'block';
 
-    const beginBtn = document.getElementById('nav-begin-btn');
-    const controls = document.getElementById('nav-controls');
-    const choiceCard = document.getElementById('nav-start-choice');
-    const isChoiceVisible = choiceCard && choiceCard.style.display === 'block';
+  if (controls) controls.style.display = 'none';
 
+  if (navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS) {
     if (beginBtn) beginBtn.style.display = 'inline-flex';
-    if (controls) controls.style.display = 'none';
 
-    if (!isChoiceVisible) {
-      showNavStartChoiceCard(navCurrentDistanceToCentreMeters);
-      showToast(`Within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} — choose how to start the next route`);
+    if (!navCentrePromptDismissed && !isChoiceVisible) {
+      showNavStartChoiceCard(navCurrentDistanceToCentreMeters, 'near-centre');
+      showToast(`Within ${NAV_START_RADIUS_MILES} mile of ${navCurrentCentre.name} — start this route now?`);
     }
+  } else {
+    if (beginBtn) beginBtn.style.display = 'none';
+    hideNavStartChoiceCard();
+    navCentrePromptDismissed = false;
+  }
+}
   }
 }
 
