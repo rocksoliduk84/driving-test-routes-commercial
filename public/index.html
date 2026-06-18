@@ -1935,16 +1935,16 @@ function getUserLocationForNav(centre, options = {}) {
 
       const bounds = L.latLngBounds([[userLat, userLng], [centre.lat, centre.lng]]);
       navMap.fitBounds(bounds, {padding: [40, 40]});
-      document.getElementById('nav-phase-label').textContent = '🧭 Choose how to start this route';
-      document.getElementById('nav-instruction').textContent = `You are ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} from ${centre.name}. Choose how you want to start this route.`;
+            document.getElementById('nav-phase-label').textContent = '🧭 Go to the test centre first';
+      document.getElementById('nav-instruction').textContent = `You are ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} from ${centre.name}. Start by going to the test centre first.`;
       document.getElementById('nav-steps-list').innerHTML = `
-        <div class="nav-step nav-step-active">1. Start the remaining route from your current location.</div>
-        <div class="nav-step">2. Or navigate to ${centre.name} Test Centre first, then start the route there.</div>
-        <div class="nav-step">3. If you are within ${NAV_START_RADIUS_MILES} mile of the centre, you can begin the actual route straight away.</div>
+        <div class="nav-step nav-step-active">1. Use the internal map or Google Maps to go to ${centre.name} first.</div>
+        <div class="nav-step">2. When you are within ${NAV_START_RADIUS_MILES} mile of the centre, we will ask if you want to start the new route.</div>
+        <div class="nav-step">3. If you press Yes, the route will start immediately from there.</div>
       `;
       document.getElementById('nav-begin-btn').style.display = 'none';
       document.getElementById('nav-controls').style.display = 'none';
-      showNavStartChoiceCard(navCurrentDistanceToCentreMeters);
+      showNavStartChoiceCard(navCurrentDistanceToCentreMeters, 'launch');
     },
     () => startPhase2Navigation(),
     {timeout: 8000, enableHighAccuracy: true}
