@@ -2260,8 +2260,6 @@ function startGPSTracking(resumeMode = 'restart') {
       !navRejoinTarget;
 
     if (shouldShowOffRouteCard) {
-      showOffRouteCard(nearest.distanceMeters);
-    } else if (nearest && nearest.distanceMeters <= NAV_OFF_ROUTE_THRESHOLD_METERS) {
       hideOffRouteCard();
     } else if (resumeMode !== 'rejoin') {
       hideOffRouteCard();
