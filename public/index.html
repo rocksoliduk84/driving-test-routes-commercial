@@ -1559,63 +1559,76 @@ function ensureNavStartChoiceCard() {
   card.style.margin = '10px 0';
 
   card.innerHTML = `
-    <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#fff;">Choose how to start this route</div>
+    <div id="nav-start-choice-title" style="font-weight:700;font-size:14px;margin-bottom:8px;color:#fff;"></div>
     <div id="nav-start-choice-text" style="font-size:12px;line-height:1.6;color:var(--grey);margin-bottom:12px;"></div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="nav-btn nav-btn-next" style="width:100%;justify-content:center;" onclick="chooseNavStartMode('remaining-route')">🧭 Use internal map from current location</button>
-      <button class="nav-btn nav-btn-begin" style="width:100%;justify-content:center;" onclick="chooseNavStartMode('centre-first')">📍 Use internal map via test centre first</button>
-      <button class="nav-btn nav-btn-google" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('remaining-route')">📲 Open Google Maps from current location</button>
-      <button class="nav-btn nav-btn-google" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('centre-first')">📍 Open Google Maps via test centre first</button>
-    </div>
+    <div id="nav-start-choice-actions" style="display:flex;flex-direction:column;gap:8px;"></div>
   `;
 
   const stepsList = document.getElementById('nav-steps-list');
   navBottom.insertBefore(card, stepsList || null);
   return card;
 }
+
 function hideNavStartChoiceCard() {
   const card = document.getElementById('nav-start-choice');
   if (card) card.style.display = 'none';
 }
 
-function showNavStartChoiceCard(distanceMeters) {
+function showNavStartChoiceCard(distanceMeters, mode = 'launch') {
   const card = ensureNavStartChoiceCard();
   if (!card) return;
+
+  const titleEl = document.getElementById('nav-start-choice-title');
   const textEl = document.getElementById('nav-start-choice-text');
-  const isWithinRadius = typeof distanceMeters === 'number' && distanceMeters <= NAV_START_RADIUS_METERS;
-  if (textEl) {
-    textEl.innerHTML = isWithinRadius
-      ? `You are <strong>within ${NAV_START_RADIUS_MILES} mile</strong> of ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}. You can start the remaining route now, or drive to the test centre first.`
-      : `You are about <strong>${formatDistanceMiles(distanceMeters)}</strong> from ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}. You can either start following the remaining route from where you are, or navigate to the test centre first.`;
+  const actionsEl = document.getElementById('nav-start-choice-actions');
+
+  if (!titleEl || !textEl || !actionsEl) return;
+
+  if (mode === 'near-centre') {
+    titleEl.textContent = 'Start this route now?';
+    textEl.innerHTML =
+      `You are within <strong>${NAV_START_RADIUS_MILES} mile</strong> of ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}. Do you want to start the new route now, or continue driving to the test centre first?`;
+    actionsEl.innerHTML = `
+      <button class="nav-btn nav-btn-next" style="width:100%;justify-content:center;" onclick="startRouteFromRadiusPrompt()">✅ Yes — start route now</button>
+      <button class="nav-btn nav-btn-secondary" style="width:100%;justify-content:center;" onclick="continueToTestCentreFirst()">➡️ No — continue to test centre</button>
+      <button class="nav-btn nav-btn-google" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('centre-first')">📍 Open Google Maps to test centre</button>
+    `;
+  } else {
+    titleEl.textContent = 'Go to the test centre first';
+    textEl.innerHTML =
+      `This route now starts by taking you back to ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'} first. When you are within <strong>${NAV_START_RADIUS_MILES} mile</strong>, we will ask if you want to start the new route.`;
+    actionsEl.innerHTML = `
+      <button class="nav-btn nav-btn-begin" style="width:100%;justify-content:center;" onclick="chooseNavStartMode('centre-first')">🧭 Use internal map to test centre</button>
+      <button class="nav-btn nav-btn-google" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('centre-first')">📍 Open Google Maps to test centre</button>
+    `;
   }
+
   card.style.display = 'block';
+}
+
+function startRouteFromRadiusPrompt() {
+  navCentrePromptDismissed = false;
+  hideNavStartChoiceCard();
+  beginTestRoute();
+}
+
+function continueToTestCentreFirst() {
+  navCentrePromptDismissed = true;
+  hideNavStartChoiceCard();
+  showToast(`Okay — continue to ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'} first`);
 }
 
 function chooseNavStartMode(mode) {
   hideNavStartChoiceCard();
   if (!navCurrentCentre) return;
 
-  if (mode === 'centre-first') {
-    navAutoStartFromCentre = true;
-    navPhase = 1;
-    renderRouteToCentrePreview(navCurrentCentre);
-    startGPSTracking('centre-first');
-    showToast(`Drive to within ${NAV_AUTO_START_FROM_CENTRE_METERS}m of ${navCurrentCentre.name} to auto-start the route`);
-    return;
-  }
-
+  navCentrePromptDismissed = false;
   navAutoStartFromCentre = false;
-
-  if (!navLastKnownPosition) {
-    startPhase2Navigation();
-    return;
-  }
-
-  clearRejoinRouteOverlay();
-  hideOffRouteCard();
-
-  navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(
-    navLastKnownPosition.lat,
+  navPhase = 1;
+  renderRouteToCentrePreview(navCurrentCentre);
+  startGPSTracking('centre-first');
+  showToast(`Driving to ${navCurrentCentre.name}. We will ask again when you are within ${NAV_START_RADIUS_MILES} mile.`);
+}
     navLastKnownPosition.lng,
     navCurrentCentre.lat,
     navCurrentCentre.lng
