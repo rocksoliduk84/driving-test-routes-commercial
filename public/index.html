@@ -1428,6 +1428,30 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
 
   if (!routePoints.length) return null;
 
+  const isNearCentre =
+    navCurrentCentre &&
+    distanceBetweenPointsMeters(
+      lat,
+      lng,
+      navCurrentCentre.lat,
+      navCurrentCentre.lng
+    ) <= NAV_CENTRE_START_TOLERANCE_METERS;
+
+  if (isNearCentre && Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length) {
+    const startPoint = navCurrentWaypoints[0];
+    return {
+      index: 0,
+      geometryIndex: 0,
+      distanceMeters: distanceBetweenPointsMeters(
+        lat,
+        lng,
+        startPoint.lat,
+        startPoint.lng
+      ),
+      point: startPoint
+    };
+  }
+
   let bestIndex = 0;
   let bestDist = Infinity;
 
@@ -1441,17 +1465,13 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
 
   const point = routePoints[bestIndex];
   const rawWaypointIndex = navCurrentWaypoints.length > 1
-    ? Math.round((bestIndex / Math.max(1, routePoints.length - 1)) * (navCurrentWaypoints.length - 1))
+    ? Math.round(
+        (bestIndex / Math.max(1, routePoints.length - 1)) *
+        (navCurrentWaypoints.length - 1)
+      )
     : bestIndex;
 
-  const isAtCentre =
-    navCurrentCentre &&
-    distanceBetweenPointsMeters(lat, lng, navCurrentCentre.lat, navCurrentCentre.lng) <= NAV_REJOIN_THRESHOLD_METERS;
-
-  const maxWaypointIndex = isAtCentre
-    ? Math.max(0, navCurrentWaypoints.length - 1)
-    : Math.max(0, navCurrentWaypoints.length - 2);
-
+  const maxWaypointIndex = Math.max(0, navCurrentWaypoints.length - 2);
   const waypointIndex = Math.max(0, Math.min(rawWaypointIndex, maxWaypointIndex));
 
   return {
