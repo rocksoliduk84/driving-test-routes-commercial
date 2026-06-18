@@ -1629,36 +1629,6 @@ function chooseNavStartMode(mode) {
   startGPSTracking('centre-first');
   showToast(`Driving to ${navCurrentCentre.name}. We will ask again when you are within ${NAV_START_RADIUS_MILES} mile.`);
 }
-    navLastKnownPosition.lng,
-    navCurrentCentre.lat,
-    navCurrentCentre.lng
-  );
-
-  const stepIdx = estimateStepIndexFromLocation(
-    navLastKnownPosition.lat,
-    navLastKnownPosition.lng
-  );
-
-  const resumeState = {
-    phase: 2,
-    stepIdx,
-    lastKnownLat: navLastKnownPosition.lat,
-    lastKnownLng: navLastKnownPosition.lng
-  };
-
-  const startMode =
-    navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS
-      ? 'radius-start'
-      : 'continue';
-
-  startPhase2Navigation(resumeState, startMode);
-
-  showToast(
-    startMode === 'radius-start'
-      ? `Within ${NAV_START_RADIUS_MILES} mile of ${navCurrentCentre.name} — starting the route from your current location`
-      : 'Starting the remaining route from your current location'
-  );
-}
 function renderRouteToCentrePreview(centre) {
   if (!navLastKnownPosition) {
     startPhase2Navigation();
