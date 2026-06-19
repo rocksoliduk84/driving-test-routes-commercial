@@ -2309,37 +2309,52 @@ function startGPSTracking(resumeMode = 'restart') {
           navCurrentStepIdx = Math.max(navCurrentStepIdx, estimateStepIndexFromLocation(lat, lng));
           renderNavSteps();
           speakCurrentStep();
-          showToast('You are back on the planned route');
-        }
-      }
+          function beginTestRoute() {
+  if (navLastKnownPosition && navCurrentCentre) {
+    navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(
+      navLastKnownPosition.lat,
+      navLastKnownPosition.lng,
+      navCurrentCentre.lat,
+      navCurrentCentre.lng
+    );
 
-      if (navMap) navMap.panTo([lat, lng], { animate: true });
-      saveNavigationState('gps-update');
-    },
-    null,
-    { enableHighAccuracy: true, maximumAge: 2000 }
-  );
-}
+    const routeStartPoint =
+      Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length
+        ? navCurrentWaypoints[0]
+        : navCurrentCentre;
 
-function stopNavigation() {
-  if (navWatchId) {
-    navigator.geolocation.clearWatch(navWatchId);
-    navWatchId = null;
+    const distanceToRouteStart = routeStartPoint
+      ? distanceBetweenPointsMeters(
+          navLastKnownPosition.lat,
+          navLastKnownPosition.lng,
+          routeStartPoint.lat,
+          routeStartPoint.lng
+        )
+      : Infinity;
+
+    const isWithinRadius =
+      navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
+
+    const directState = {
+      phase: 2,
+      stepIdx: 0,
+      lastKnownLat: navLastKnownPosition.lat,
+      lastKnownLng: navLastKnownPosition.lng
+    };
+
+    const mode = isWithinRadius
+      ? (distanceToRouteStart > NAV_REJOIN_THRESHOLD_METERS ? 'rejoin' : 'radius-start')
+      : 'continue';
+
+    startPhase2Navigation(directState, mode);
+  } else {
+    startPhase2Navigation();
   }
-  window.speechSynthesis && window.speechSynthesis.cancel();
-  hideNavStartChoiceCard();
-  hideOffRouteCard();
-  clearRejoinRouteOverlay();
-  const modal = document.getElementById('nav-modal');
-  if (modal) modal.classList.remove('open');
-  if (navMap) { navMap.remove(); navMap = null; }
-  navStarted = false;
-  navPhase = 1;
-  navCurrentDistanceToCentreMeters = null;
-  navRouteGeometry = [];
-  navRouteInstructionPoints = [];
-    navAwaitingRouteJoin = false;
-  navAutoStartFromCentre = false;
+
+  document.getElementById('nav-begin-btn').style.display = 'none';
+  document.getElementById('nav-controls').style.display = 'flex';
+  saveNavigationState('begin-test-route');
+}
 }
 
 function beginTestRoute() {
