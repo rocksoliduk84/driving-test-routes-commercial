@@ -1963,52 +1963,73 @@ function startPhase2Navigation(resumeState = null, resumeMode = 'restart') {
   document.getElementById('nav-controls').style.display = 'flex';
   refreshGoogleButtonState();
 
-    const nearCentreStart = navLastKnownPosition
-  ? isNearCentreStart(navLastKnownPosition.lat, navLastKnownPosition.lng)
-  : false;
+      const routeStartPoint =
+    Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length
+      ? navCurrentWaypoints[0]
+      : centre;
 
-const nearestAtStart = (!nearCentreStart && navLastKnownPosition)
-  ? getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng)
-  : null;
-const shouldAwaitRouteJoin =
-  !nearCentreStart &&
-  !!navLastKnownPosition &&
-  !!nearestAtStart &&
-  nearestAtStart.distanceMeters > NAV_REJOIN_THRESHOLD_METERS &&
-  resumeMode === 'rejoin';
+  const distanceToRouteStart =
+    navLastKnownPosition && routeStartPoint
+      ? distanceBetweenPointsMeters(
+          navLastKnownPosition.lat,
+          navLastKnownPosition.lng,
+          routeStartPoint.lat,
+          routeStartPoint.lng
+        )
+      : Infinity;
 
-if (shouldAwaitRouteJoin) {
-  enterAwaitingRouteJoin(nearestAtStart.distanceMeters);
-} else {
-  navAwaitingRouteJoin = false;
+  const nearRouteStart =
+    Number.isFinite(distanceToRouteStart) &&
+    distanceToRouteStart <= NAV_REJOIN_THRESHOLD_METERS;
 
-  if (nearCentreStart) {
+  const shouldAwaitRouteJoin =
+    !!navLastKnownPosition &&
+    !!routeStartPoint &&
+    (resumeMode === 'rejoin' || resumeMode === 'radius-start') &&
+    !nearRouteStart;
+
+  if (shouldAwaitRouteJoin) {
+    navAwaitingRouteJoin = true;
+    navRejoinTarget = {
+      index: 0,
+      geometryIndex: 0,
+      distanceMeters: distanceToRouteStart,
+      point: routeStartPoint
+    };
+    rejoinCurrentRoute();
+  } else {
+    navAwaitingRouteJoin = false;
+    clearRejoinRouteOverlay();
+    navRejoinTarget = null;
     navCurrentStepIdx = 0;
-    document.getElementById('nav-instruction').textContent =
-      `Starting the route from near ${centre ? centre.name : 'the test centre'}...`;
-  } else if (resumeMode === 'radius-start') {
-    document.getElementById('nav-instruction').textContent =
-      `You are within ${NAV_START_RADIUS_MILES} mile of ${centre ? centre.name : 'the test centre'}. Starting the route from your current location...`;
-  } else if (resumeState && resumeMode === 'continue') {
-    document.getElementById('nav-instruction').textContent =
-      'Resuming route from your current location...';
-  } else if (resumeMode === 'continue') {
-    document.getElementById('nav-instruction').textContent =
-      'Starting the remaining route from your current location...';
-  } else if (resumeState && resumeMode === 'rejoin') {
-    document.getElementById('nav-instruction').textContent =
-      'Guiding you back to the nearest point on the route...';
+
+    if (nearRouteStart) {
+      document.getElementById('nav-instruction').textContent =
+        `Starting the route from near ${centre ? centre.name : 'the test centre'}...`;
+    } else if (resumeState && resumeMode === 'continue') {
+      navCurrentStepIdx = Math.max(
+        0,
+        Math.min(resumeState.stepIdx || 0, navCurrentSteps.length - 1)
+      );
+      document.getElementById('nav-instruction').textContent =
+        'Resuming route from your current location...';
+    } else if (resumeMode === 'continue') {
+      document.getElementById('nav-instruction').textContent =
+        'Starting the remaining route from your current location...';
+    } else if (resumeState && resumeMode === 'rejoin') {
+      document.getElementById('nav-instruction').textContent =
+        'Guiding you back to the start of the route...';
+    } else {
+      document.getElementById('nav-instruction').textContent =
+        `Starting the route from near ${centre ? centre.name : 'the test centre'}...`;
+    }
+
+    renderNavSteps();
+    speakCurrentStep();
   }
 
-  renderNavSteps();
-  speakCurrentStep();
-}
-
-startGPSTracking(resumeMode);
-if (resumeMode === 'rejoin' && shouldAwaitRouteJoin) {
-  rejoinCurrentRoute();
-}
-saveNavigationState(resumeState ? 'resume-phase2' : 'phase2');
+  startGPSTracking(resumeMode);
+  saveNavigationState(resumeState ? 'resume-phase2' : 'phase2');
 }
 function renderNavSteps() {
   const list = document.getElementById('nav-steps-list');
