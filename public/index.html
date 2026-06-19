@@ -2127,18 +2127,26 @@ async function rejoinCurrentRoute() {
     showToast('Current location unavailable');
     return;
   }
-  const nearest = getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
-  if (!nearest || !nearest.point) {
+
+  const target =
+    (navRejoinTarget && navRejoinTarget.point)
+      ? navRejoinTarget
+      : getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
+
+  if (!target || !target.point) {
     showToast('Route line not ready yet');
     return;
   }
+
   clearRejoinRouteOverlay();
-  navRejoinTarget = nearest;
+  navRejoinTarget = target;
+
   try {
     const route = await fetchOsrmRouteForWaypoints([
       { lat: navLastKnownPosition.lat, lng: navLastKnownPosition.lng },
-      nearest.point
+      target.point
     ]);
+
     if (route && route.geometry && route.geometry.coordinates) {
       const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
       navRejoinLayer = L.polyline(coords, {
@@ -2148,14 +2156,18 @@ async function rejoinCurrentRoute() {
         dashArray: '8,8'
       }).addTo(navMap);
       const mins = Math.max(1, Math.round((route.duration || 0) / 60));
-      document.getElementById('nav-instruction').textContent = `↩ Rejoin the planned route in about ${formatDistanceMetersShort(route.distance || nearest.distanceMeters)} · ${mins} min`;
+      document.getElementById('nav-instruction').textContent =
+        `↩ Drive to the start of the route in about ${formatDistanceMetersShort(route.distance || target.distanceMeters)} · ${mins} min`;
     } else {
-      document.getElementById('nav-instruction').textContent = `↩ Head back to the route line (${formatDistanceMetersShort(nearest.distanceMeters)})`;
+      document.getElementById('nav-instruction').textContent =
+        `↩ Drive to the start of the route (${formatDistanceMetersShort(target.distanceMeters)})`;
     }
   } catch (e) {
-    document.getElementById('nav-instruction').textContent = `↩ Head back to the route line (${formatDistanceMetersShort(nearest.distanceMeters)})`;
+    document.getElementById('nav-instruction').textContent =
+      `↩ Drive to the start of the route (${formatDistanceMetersShort(target.distanceMeters)})`;
   }
-  showToast('Guiding you back to the planned route');
+
+  showToast('Guiding you to the start of the route');
 }
 
 function startGPSTracking(resumeMode = 'restart') {
