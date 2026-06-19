@@ -2263,53 +2263,60 @@ function startGPSTracking(resumeMode = 'restart') {
     navCentrePromptDismissed = false;
   }
 }
-      if (navPhase === 2 && navCurrentSteps.length) {
-  const nearest = getNearestRoutePoint(lat, lng);
+            if (navPhase === 2 && navCurrentSteps.length) {
+        const nearest = getNearestRoutePoint(lat, lng);
 
-  if (navAwaitingRouteJoin) {
-    if (nearest && nearest.distanceMeters <= NAV_REJOIN_THRESHOLD_METERS) {
-      activateRouteGuidanceFromCurrentLocation(lat, lng, true);
-      showToast('Back on the route — turn-by-turn guidance started');
-    } else if (nearest) {
-      enterAwaitingRouteJoin(nearest.distanceMeters);
-    }
-  } else {
-    const matchedIdx = estimateStepIndexFromLocation(lat, lng);
-    if (matchedIdx > navCurrentStepIdx && !navAutoAdvanceLock) {
-      navAutoAdvanceLock = true;
-      navCurrentStepIdx = matchedIdx;
-      renderNavSteps();
-      if (resumeMode !== 'rejoin') speakCurrentStep();
-      setTimeout(() => navAutoAdvanceLock = false, 1500);
-    }
+        if (navAwaitingRouteJoin) {
+          const rejoinDistance =
+            navRejoinTarget && navRejoinTarget.point
+              ? distanceBetweenPointsMeters(
+                  lat,
+                  lng,
+                  navRejoinTarget.point.lat,
+                  navRejoinTarget.point.lng
+                )
+              : (nearest ? nearest.distanceMeters : Infinity);
 
-    const shouldShowOffRouteCard =
-      resumeMode === 'rejoin' &&
-      nearest &&
-      nearest.distanceMeters > NAV_OFF_ROUTE_THRESHOLD_METERS &&
-      !navRejoinTarget;
+          if (
+            Number.isFinite(rejoinDistance) &&
+            rejoinDistance <= NAV_REJOIN_THRESHOLD_METERS
+          ) {
+            navAwaitingRouteJoin = false;
+            clearRejoinRouteOverlay();
+            hideOffRouteCard();
+            navRejoinTarget = null;
+            navCurrentStepIdx = 0;
+            document.getElementById('nav-instruction').textContent =
+              `Starting the route from near ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}...`;
+            renderNavSteps();
+            speakCurrentStep();
+            showToast('You are at the start of the route — turn-by-turn guidance started');
+          } else {
+            enterAwaitingRouteJoin(rejoinDistance);
+            document.getElementById('nav-instruction').textContent =
+              `↩ Drive to the start of the route (${formatDistanceMetersShort(rejoinDistance)})`;
+          }
+        } else {
+          const matchedIdx = estimateStepIndexFromLocation(lat, lng);
+          if (matchedIdx > navCurrentStepIdx && !navAutoAdvanceLock) {
+            navAutoAdvanceLock = true;
+            navCurrentStepIdx = matchedIdx;
+            renderNavSteps();
+            if (resumeMode !== 'rejoin') speakCurrentStep();
+            setTimeout(() => navAutoAdvanceLock = false, 1500);
+          }
 
-    if (shouldShowOffRouteCard) {
-      hideOffRouteCard();
-    } else if (resumeMode !== 'rejoin') {
-      hideOffRouteCard();
-    }
-  }
-}
-            if (navRejoinTarget) {
-        const distToRejoin = distanceBetweenPointsMeters(
-          lat,
-          lng,
-          navRejoinTarget.point.lat,
-          navRejoinTarget.point.lng
-        );
-        if (distToRejoin <= NAV_REJOIN_THRESHOLD_METERS) {
-          clearRejoinRouteOverlay();
-          hideOffRouteCard();
-          navCurrentStepIdx = Math.max(navCurrentStepIdx, estimateStepIndexFromLocation(lat, lng));
-          renderNavSteps();
-          speakCurrentStep();
-          showToast('You are back on the planned route');
+          const shouldShowOffRouteCard =
+            resumeMode === 'rejoin' &&
+            nearest &&
+            nearest.distanceMeters > NAV_OFF_ROUTE_THRESHOLD_METERS &&
+            !navRejoinTarget;
+
+          if (shouldShowOffRouteCard) {
+            hideOffRouteCard();
+          } else if (resumeMode !== 'rejoin') {
+            hideOffRouteCard();
+          }
         }
       }
 
