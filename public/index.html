@@ -2296,7 +2296,7 @@ function startGPSTracking(resumeMode = 'restart') {
     }
   }
 }
-      if (navRejoinTarget) {
+            if (navRejoinTarget) {
         const distToRejoin = distanceBetweenPointsMeters(
           lat,
           lng,
@@ -2309,7 +2309,41 @@ function startGPSTracking(resumeMode = 'restart') {
           navCurrentStepIdx = Math.max(navCurrentStepIdx, estimateStepIndexFromLocation(lat, lng));
           renderNavSteps();
           speakCurrentStep();
-          function beginTestRoute() {
+          showToast('You are back on the planned route');
+        }
+      }
+
+      if (navMap) navMap.panTo([lat, lng], { animate: true });
+      saveNavigationState('gps-update');
+    },
+    null,
+    { enableHighAccuracy: true, maximumAge: 2000 }
+  );
+}
+
+function stopNavigation() {
+  if (navWatchId) {
+    navigator.geolocation.clearWatch(navWatchId);
+    navWatchId = null;
+  }
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  hideNavStartChoiceCard();
+  hideOffRouteCard();
+  clearRejoinRouteOverlay();
+  const modal = document.getElementById('nav-modal');
+  if (modal) modal.classList.remove('open');
+  if (navMap) { navMap.remove(); navMap = null; }
+  navStarted = false;
+  navPhase = 1;
+  navCurrentDistanceToCentreMeters = null;
+  navRouteGeometry = [];
+  navRouteInstructionPoints = [];
+  navAwaitingRouteJoin = false;
+  navAutoStartFromCentre = false;
+  navCentrePromptDismissed = false;
+}
+
+function beginTestRoute() {
   if (navLastKnownPosition && navCurrentCentre) {
     navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(
       navLastKnownPosition.lat,
@@ -2355,41 +2389,6 @@ function startGPSTracking(resumeMode = 'restart') {
   document.getElementById('nav-controls').style.display = 'flex';
   saveNavigationState('begin-test-route');
 }
-}
-
-function beginTestRoute() {
-  if (navLastKnownPosition && navCurrentCentre) {
-    navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(navLastKnownPosition.lat, navLastKnownPosition.lng, navCurrentCentre.lat, navCurrentCentre.lng);
-
-            const isWithinRadius = navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS;
-    const isAtCentre = navCurrentDistanceToCentreMeters <= NAV_AUTO_START_FROM_CENTRE_METERS;
-
-    const stepIdx = isAtCentre
-      ? 0
-      : estimateStepIndexFromLocation(
-          navLastKnownPosition.lat,
-          navLastKnownPosition.lng
-        );
-
-    const directState = {
-      phase: 2,
-      stepIdx,
-      lastKnownLat: navLastKnownPosition.lat,
-      lastKnownLng: navLastKnownPosition.lng
-    };
-
-    const mode = isWithinRadius ? 'radius-start' : 'continue';
-    startPhase2Navigation(directState, mode);
-  } else {
-    startPhase2Navigation();
-  }
-
-  document.getElementById('nav-begin-btn').style.display = 'none';
-  document.getElementById('nav-controls').style.display = 'flex';
-  saveNavigationState('begin-test-route');
-}
-
-
 // CENTRES LIST
 // ============================================================
 let currentFilter = 'all';
