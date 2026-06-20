@@ -1371,47 +1371,112 @@ function refreshGoogleButtonState() {
 }
 
 function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
+function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
   if (!navCurrentCentre) return '';
 
   const currentPos = navLastKnownPosition || navCurrentCentre;
-  let destination = navCurrentCentre;
+  const routePoints = Array.isArray(navCurrentWaypoints)
+    ? navCurrentWaypoints.filter(Boolean)
+    : [];
 
-  if (mode !== 'centre-first' && navLastKnownPosition) {
-    const nearest = getNearestRoutePoint(
-      navLastKnownPosition.lat,
-      navLastKnownPosition.lng
-    );
-
-    if (nearest && Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length) {
-      const startIdx = Math.max(0, (nearest.index || 0) + 1);
-      let routeTarget = null;
-
-      for (let i = startIdx; i < navCurrentWaypoints.length; i++) {
-        const p = navCurrentWaypoints[i];
-        const distFromCurrent = distanceBetweenPointsMeters(
-          currentPos.lat,
-          currentPos.lng,
-          p.lat,
-          p.lng
-        );
-        const distFromCentre = distanceBetweenPointsMeters(
+  const distanceToCentre =
+    navLastKnownPosition
+      ? distanceBetweenPointsMeters(
+          navLastKnownPosition.lat,
+          navLastKnownPosition.lng,
           navCurrentCentre.lat,
-          navCurrentCentre.lng,
-          p.lat,
-          p.lng
-        );
+          navCurrentCentre.lng
+        )
+      : Infinity;
 
-        if (distFromCurrent >= 250 && distFromCentre >= 120) {
-          routeTarget = p;
-          break;
-        }
-      }
+  if (mode === 'centre-first' || routePoints.length < 2) {
+    const params = new URLSearchParams({
+      api: '1',
+      origin: `${currentPos.lat},${currentPos.lng}`,
+      destination: `${navCurrentCentre.lat},${navCurrentCentre.lng}`,
+      travelmode: 'driving',
+      dir_action: 'navigate'
+    });
 
-      destination = routeTarget || nearest.point || navCurrentCentre;
-    } else if (nearest && nearest.point) {
-      destination = nearest.point;
-    }
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
   }
+
+  const destinationPoint = routePoints[routePoints.length - 1] || navCurrentCentre;
+
+  // Safest limit for mobile Google Maps URL handling
+  const maxGoogleWaypoints = 3;
+  const waypointPoints = [];
+  const used = new Set();
+
+  const addWaypoint = (point) => {
+    if (!point) return;
+    const key = `${point.lat},${point.lng}`;
+    if (used.has(key)) return;
+    if (
+      distanceBetweenPointsMeters(
+        point.lat,
+        point.lng,
+        destinationPoint.lat,
+        destinationPoint.lng
+      ) < 60
+    ) return;
+    waypointPoints.push(point);
+    used.add(key);
+  };
+
+  // If farther than 0.7 miles, make the test centre the first waypoint
+  if (distanceToCentre > NAV_START_RADIUS_METERS) {
+    addWaypoint(navCurrentCentre);
+  }
+
+  const shapingSlots = Math.max(0, maxGoogleWaypoints - waypointPoints.length);
+  const fractions =
+    shapingSlots >= 3 ? [0.2, 0.45, 0.7] :
+    shapingSlots === 2 ? [0.35, 0.7] :
+    shapingSlots === 1 ? [0.6] :
+    [];
+
+  fractions.forEach((frac) => {
+    const idx = Math.max(
+      1,
+      Math.min(routePoints.length - 2, Math.round((routePoints.length - 1) * frac))
+    );
+    const point = routePoints[idx];
+    if (!point) return;
+
+    // Avoid re-adding a point that is effectively the centre when centre is already a waypoint
+    if (
+      distanceToCentre > NAV_START_RADIUS_METERS &&
+      distanceBetweenPointsMeters(
+        point.lat,
+        point.lng,
+        navCurrentCentre.lat,
+        navCurrentCentre.lng
+      ) < 60
+    ) {
+      return;
+    }
+
+    addWaypoint(point);
+  });
+
+  const params = new URLSearchParams({
+    api: '1',
+    origin: `${currentPos.lat},${currentPos.lng}`,
+    destination: `${destinationPoint.lat},${destinationPoint.lng}`,
+    travelmode: 'driving',
+    dir_action: 'navigate'
+  });
+
+  if (waypointPoints.length) {
+    params.set(
+      'waypoints',
+      waypointPoints.map(p => `${p.lat},${p.lng}`).join('|')
+    );
+  }
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
 
   const params = new URLSearchParams({
     api: '1',
