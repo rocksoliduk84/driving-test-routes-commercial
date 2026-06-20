@@ -1573,7 +1573,12 @@ function showOffRouteCard(distanceMeters) {
   const card = document.getElementById('offroute-card');
   const meta = document.getElementById('offroute-meta');
   if (!card || !meta) return;
-  function showNavStartChoiceCard(distanceMeters, mode = 'launch') {
+
+  meta.textContent = `${formatDistanceMetersShort(distanceMeters)} away from the planned route`;
+  card.style.display = 'block';
+}
+
+function showNavStartChoiceCard(distanceMeters, mode = 'launch') {
   const card = ensureNavStartChoiceCard();
   if (!card) return;
 
@@ -1602,8 +1607,6 @@ function showOffRouteCard(distanceMeters) {
   }
 
   card.style.display = 'block';
-}
-  if (shouldSpeak) speakCurrentStep();
 }
 function ensureNavStartChoiceCard() {
   let card = document.getElementById('nav-start-choice');
