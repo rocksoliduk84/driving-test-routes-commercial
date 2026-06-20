@@ -1640,38 +1640,6 @@ function hideNavStartChoiceCard() {
   if (card) card.style.display = 'none';
 }
 
-function showNavStartChoiceCard(distanceMeters, mode = 'launch') {
-  const card = ensureNavStartChoiceCard();
-  if (!card) return;
-
-  const titleEl = document.getElementById('nav-start-choice-title');
-  const textEl = document.getElementById('nav-start-choice-text');
-  const actionsEl = document.getElementById('nav-start-choice-actions');
-
-  if (!titleEl || !textEl || !actionsEl) return;
-
-  if (mode === 'near-centre') {
-    titleEl.textContent = 'Start this route now?';
-    textEl.innerHTML =
-      `You are within <strong>${NAV_START_RADIUS_MILES} mile</strong> of ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'}. Do you want to start the new route now, or continue driving to the test centre first?`;
-    actionsEl.innerHTML = `
-      <button class="nav-btn nav-btn-next" style="width:100%;justify-content:center;" onclick="startRouteFromRadiusPrompt()">✅ Yes — start route now</button>
-      <button class="nav-btn nav-btn-secondary" style="width:100%;justify-content:center;" onclick="continueToTestCentreFirst()">➡️ No — continue to test centre</button>
-      <button class="nav-btn nav-btn-google" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('centre-first')">📍 Open Google Maps to test centre</button>
-    `;
-  } else {
-    titleEl.textContent = 'Go to the test centre first';
-    textEl.innerHTML =
-      `This route now starts by taking you back to ${navCurrentCentre ? navCurrentCentre.name : 'the test centre'} first. When you are within <strong>${NAV_START_RADIUS_MILES} mile</strong>, we will ask if you want to start the new route.`;
-    actionsEl.innerHTML = `
-      <button class="nav-btn nav-btn-begin" style="width:100%;justify-content:center;" onclick="chooseNavStartMode('centre-first')">🧭 Use internal map to test centre</button>
-      <button class="nav-btn nav-btn-google" style="width:100%;justify-content:center;" onclick="openInGoogleMaps('centre-first')">📍 Open Google Maps to test centre</button>
-    `;
-  }
-
-  card.style.display = 'block';
-}
-
 function startRouteFromRadiusPrompt() {
   navCentrePromptDismissed = false;
   hideNavStartChoiceCard();
