@@ -1476,17 +1476,6 @@ function buildGoogleMapsNavigationUrl(mode = 'remaining-route') {
 
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
-
-  const params = new URLSearchParams({
-    api: '1',
-    origin: `${currentPos.lat},${currentPos.lng}`,
-    destination: `${destination.lat},${destination.lng}`,
-    travelmode: 'driving',
-    dir_action: 'navigate'
-  });
-
-  return `https://www.google.com/maps/dir/?${params.toString()}`;
-}
   function openInGoogleMaps(mode = 'remaining-route') {
   const url = buildGoogleMapsNavigationUrl(mode);
   if (!url) {
