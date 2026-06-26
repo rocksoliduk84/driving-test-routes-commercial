@@ -1677,7 +1677,7 @@ function renderRouteToCentrePreview(centre) {
   const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${centre.lng},${centre.lat}?overview=full&geometries=geojson&steps=true`;
   fetch(osrmUrl)
     .then(r => r.json())
-    .then(data => {
+.then(data => {
       if (data.routes && data.routes[0]) {
         const route = data.routes[0];
         const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
