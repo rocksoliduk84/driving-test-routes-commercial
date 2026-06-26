@@ -2322,18 +2322,6 @@ async function rejoinCurrentRoute() {
       (nearestToRoute && nearestToRoute.distanceMeters <= 150);
 
     const directState = {
-      phase: 2,
-async function rejoinCurrentRoute() {
-  if (!navLastKnownPosition || !navMap) {
-    showToast('Current location unavailable');
-    return;
-  }
-
-  const target =
-    (navRejoinTarget && navRejoinTarget.point)
-      ? navRejoinTarget
-      : getNearestRoutePoint(navLastKnownPosition.lat, navLastKnownPosition.lng);
-
   if (!target || !target.point) {
     showToast('Route line not ready yet');
     return;
