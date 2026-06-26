@@ -1916,78 +1916,107 @@ function getUserLocationForNav(centre, options = {}) {
     startPhase2Navigation(options.resumeState, options.resumeMode);
     return;
   }
+
   if (!navigator.geolocation) {
     startPhase2Navigation();
     return;
   }
 
-    const stepIdxFromCurrentLocation = navLastKnownPosition
-    ? estimateStepIndexFromLocation(
-        navLastKnownPosition.lat,
-        navLastKnownPosition.lng
-      )
-    : 0;
+  document.getElementById('nav-instruction').textContent = '📍 Getting your location...';
 
-  const shouldAwaitRouteJoin =
-    !!navLastKnownPosition &&
-    resumeMode === 'rejoin';
+  navigator.geolocation.getCurrentPosition(pos => {
+    const userLat = pos.coords.latitude;
+    const userLng = pos.coords.longitude;
 
-  if (shouldAwaitRouteJoin) {
-    navAwaitingRouteJoin = true;
-    rejoinCurrentRoute();
-  } else {
-    navAwaitingRouteJoin = false;
-    clearRejoinRouteOverlay();
-    navRejoinTarget = null;
+    navLastKnownPosition = { lat: userLat, lng: userLng };
+    navCurrentDistanceToCentreMeters = distanceBetweenPointsMeters(
+      userLat,
+      userLng,
+      centre.lat,
+      centre.lng
+    );
 
-    if (resumeMode === 'radius-start') {
-      navCurrentStepIdx = Math.max(
-              const nearestFromStart = getNearestRoutePoint(userLat, userLng);
-      const canStartRouteNow =
-        navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS ||
-        (nearestFromStart && nearestFromStart.distanceMeters <= 150);
+    if (!navUserMarker && navMap) {
+      navUserMarker = L.marker([userLat, userLng], {
+        icon: L.divIcon({
+          html: '<div style="background:#34d399;border:3px solid white;border-radius:50%;width:18px;height:18px;"></div>',
+          className: '',
+          iconAnchor: [9, 9]
+        })
+      }).addTo(navMap);
+    } else if (navUserMarker) {
+      navUserMarker.setLatLng([userLat, userLng]);
+    }
 
-      document.getElementById('nav-phase-label').textContent =
-        canStartRouteNow ? '🧭 Start route guidance' : '🧭 Go to the test centre first';
-      document.getElementById('nav-instruction').textContent = canStartRouteNow
-        ? 'The route is already loaded. You can start route guidance now from your current location.'
-        : `You are ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} from ${centre.name}. Start by going to the test centre first.`;
-      document.getElementById('nav-steps-list').innerHTML = canStartRouteNow
-        ? `
+    renderRouteToCentrePreview(centre);
+
+    const nearestFromStart = getNearestRoutePoint(userLat, userLng);
+    const canStartRouteNow =
+      navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS ||
+      (nearestFromStart && nearestFromStart.distanceMeters <= 150);
+
+    document.getElementById('nav-phase-label').textContent =
+      canStartRouteNow ? '🧭 Start route guidance' : '🧭 Go to the test centre first';
+
+    document.getElementById('nav-instruction').textContent = canStartRouteNow
+      ? 'The route is already loaded. You can start route guidance now from your current location.'
+      : `You are ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} from ${centre.name}. Start by going to the test centre first.`;
+
+    document.getElementById('nav-steps-list').innerHTML = canStartRouteNow
+      ? `
         <div class="nav-step nav-step-active">1. Start route guidance now from your current location.</div>
         <div class="nav-step">2. The route is already loaded on the map.</div>
         <div class="nav-step">3. Or open the loaded route in Google Maps.</div>
       `
-        : `
+      : `
         <div class="nav-step nav-step-active">1. Use the internal map or Google Maps to go to ${centre.name} first.</div>
         <div class="nav-step">2. When you are within ${NAV_START_RADIUS_MILES} mile of the centre, we will ask if you want to start the new route.</div>
         <div class="nav-step">3. If you press Start, the route guidance will begin from there.</div>
       `;
-      document.getElementById('nav-begin-btn').style.display = canStartRouteNow ? 'inline-flex' : 'none';
-      document.getElementById('nav-controls').style.display = 'none';
-      showNavStartChoiceCard(navCurrentDistanceToCentreMeters, canStartRouteNow ? 'start-now' : 'launch');
-      );
-      document.getElementById('nav-instruction').textContent =
-        'Resuming route from your current location...';
-    } else if (resumeMode === 'continue') {
-      navCurrentStepIdx = Math.max(
-        0,
-        Math.min(stepIdxFromCurrentLocation, navCurrentSteps.length - 1)
-      );
-      document.getElementById('nav-instruction').textContent =
-        'Starting the remaining route from your current location...';
-    } else {
-      navCurrentStepIdx = 0;
-      document.getElementById('nav-instruction').textContent =
-        `Starting the route from near ${centre ? centre.name : 'the test centre'}...`;
-    }
 
-    renderNavSteps();
-    speakCurrentStep();
+    document.getElementById('nav-begin-btn').style.display = canStartRouteNow ? 'inline-flex' : 'none';
+    document.getElementById('nav-controls').style.display = 'none';
+    showNavStartChoiceCard(navCurrentDistanceToCentreMeters, canStartRouteNow ? 'start-now' : 'launch');
+    refreshGoogleButtonState();
+  }, () => {
+    startPhase2Navigation();
+  }, { timeout: 8000, enableHighAccuracy: true });
+}
+
+function startPhase2Navigation(resumeState = null, resumeMode = 'restart') {
+  if (resumeState && resumeState.phase === 2) {
+    navCurrentStepIdx = Math.min(resumeState.stepIdx || 0, navCurrentSteps.length - 1);
+  } else {
+    navCurrentStepIdx = 0;
   }
 
-  startGPSTracking(resumeMode);
-  saveNavigationState(resumeState ? 'resume-phase2' : 'phase2');
+  clearRejoinRouteOverlay();
+  hideOffRouteCard();
+  hideNavStartChoiceCard();
+
+  document.getElementById('nav-phase-label').textContent = '🛣️ Phase 2: Driving the Test Route';
+  const centre = navCurrentCentre;
+
+  if (navMap && centre) {
+    const centrePos = [centre.lat, centre.lng];
+    if (navLastKnownPosition) {
+      const bounds = L.latLngBounds([
+        [navLastKnownPosition.lat, navLastKnownPosition.lng],
+        centrePos
+      ]);
+      navMap.fitBounds(bounds, { padding: [30, 30] });
+    } else {
+      navMap.setView(centrePos, 14);
+    }
+  }
+
+  document.getElementById('nav-begin-btn').style.display = 'none';
+  document.getElementById('nav-controls').style.display = 'flex';
+  refreshGoogleButtonState();
+
+  const routeStartPoint =
+    Array.isArray(navCurrentWaypoints) && navCurrentWaypoints.length
+      ? navCurrentWaypoints[0]
       : centre;
 
   const distanceToRouteStart =
