@@ -2193,50 +2193,6 @@ async function rejoinCurrentRoute() {
   }
 
   clearRejoinRouteOverlay();
-        if (
-        navPhase === 1 &&
-        navCurrentCentre &&
-        navCurrentDistanceToCentreMeters !== null
-      ) {
-        const instructionEl = document.getElementById('nav-instruction');
-        const phaseLabelEl = document.getElementById('nav-phase-label');
-        const beginBtn = document.getElementById('nav-begin-btn');
-        const controls = document.getElementById('nav-controls');
-        const choiceCard = document.getElementById('nav-start-choice');
-        const isChoiceVisible = choiceCard && choiceCard.style.display === 'block';
-
-        const nearestToRoute = getNearestRoutePoint(lat, lng);
-        const canStartRouteNow =
-          navCurrentDistanceToCentreMeters <= NAV_START_RADIUS_METERS ||
-          (nearestToRoute && nearestToRoute.distanceMeters <= 150);
-
-        if (instructionEl) {
-          instructionEl.textContent = canStartRouteNow
-            ? 'The route is already loaded. You can start route guidance now from your current location.'
-            : `Drive to ${navCurrentCentre.name} — ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} remaining`;
-        }
-
-        if (phaseLabelEl) {
-          phaseLabelEl.textContent = canStartRouteNow
-            ? '🧭 Start route guidance'
-            : `Phase 1: ${formatDistanceMiles(navCurrentDistanceToCentreMeters)} to test centre`;
-        }
-
-        if (controls) controls.style.display = 'none';
-
-        if (canStartRouteNow) {
-          if (beginBtn) beginBtn.style.display = 'inline-flex';
-
-          if (!navCentrePromptDismissed && !isChoiceVisible) {
-            showNavStartChoiceCard(navCurrentDistanceToCentreMeters, 'start-now');
-            showToast('Route is loaded — you can start route guidance now');
-          }
-        } else {
-          if (beginBtn) beginBtn.style.display = 'none';
-          hideNavStartChoiceCard();
-          navCentrePromptDismissed = false;
-        }
-      }
       const lng = pos.coords.longitude;
       navLastKnownPosition = { lat, lng };
       refreshGoogleButtonState();
